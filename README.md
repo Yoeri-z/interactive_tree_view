@@ -1,37 +1,73 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# 🌳 Flutter TreeView
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+A simple and extensible TreeView widget for Flutter with support for dynamic updates, custom node rendering, and animations.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-A package for building treeview that is easier to use than flutters `TreeSliver`
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- Separate builders for leaf and branch nodes
+- Automatic expand/collapse animations
+- Controller and Node based updates
+- Optionally manipulate nodes via unique identifiers
 
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+## 🧱 Example Usage
 
 ```dart
-const like = 'sample';
+final controller = TreeController(
+  initialNodes: [
+    TreeNode('root', 'Root Node', children: [
+      TreeNode('child1', 'Leaf Node 1'),
+      TreeNode('child2', 'Leaf Node 2'),
+    ]),
+  ],
+);
+
+TreeView(
+  controller: controller,
+  leafItemBuilder: (context, node) => Text(node.data.toString()),
+  nodeItemBuilder: (context, node) => ListTile(
+    title: Text(node.data.toString()),
+    onTap: node.toggle,
+  ),
+);
 ```
 
-## Additional information
+## 🧠 API Overview
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+### `TreeView`
+
+| Property            | Description                                       |
+|---------------------|---------------------------------------------------|
+| `controller`        | Required. Manages the tree structure.             |
+| `leafItemBuilder`   | Builder for nodes with no children.               |
+| `nodeItemBuilder`   | Builder for nodes with children.                  |
+| `rowExtent`         | Indentation for child nodes. Default: `8.0`.      |
+| `spacing`           | Vertical spacing between nodes. Default: `8.0`.   |
+| `animationDuration` | Optional expand/collapse animation duration.      |
+
+### `TreeController`
+
+- `addRoot(node)` : Add a node to the root of the list
+- `remove(node)` / `removeByIdentifier(id)`
+- `move(node, newParent)` : move a node to a new parent
+- `swap(node1, node2)` / `swapByIdentifier(id1, id2)` : swap two nodes
+- `getByIdentifier(id)` : get a node by its identifier
+
+### `TreeNode`
+
+- `identifier`: Unique ID (e.g., `String`, `int`)
+- `data`: Custom payload
+- `children`: List of child nodes
+- `expanded`: Whether the node is expanded
+- `attachChild(node)` : attach a child to the node
+- Functions on the visual expansion of the node: `expand()`, `collapse()`, `toggle()`
+
+All these methods will automatically update the treeview widgets attached to the controller.
+
+## 📦 TODO
+- Drag & drop support
+- Lazy loading
+- Selection & highlight callbacks
+
+## 📄 License
+
+MIT
