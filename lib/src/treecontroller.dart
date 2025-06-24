@@ -102,6 +102,8 @@ class TreeController extends ChangeNotifier {
 
   void addRoot(TreeNode node) {
     _rootNodes.add(node);
+    node._controller = this;
+    _nodeDict[node.identifier] = node;
     if (_onRootAdded != null) _onRootAdded(node);
     notifyListeners();
   }
