@@ -122,7 +122,7 @@ class TreeNode<T extends Object?> {
   });
 
   final Object identifier;
-  final T data;
+  T data;
 
   bool expanded;
 
