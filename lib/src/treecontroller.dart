@@ -1,8 +1,15 @@
 part of 'treeview.dart';
 
 class TreeController extends ChangeNotifier {
-  TreeController({required List<TreeNode> initialNodes})
-    : _rootNodes = initialNodes {
+  TreeController({
+    required List<TreeNode> initialNodes,
+    void Function(TreeNode parent, TreeNode child)? onChildAttached,
+    void Function(TreeNode parent, TreeNode child)? onChildRemoved,
+    void Function(TreeNode node)? onRootRemoved,
+  }) : _onChildAttached = onChildAttached,
+       _onChildRemoved = onChildRemoved,
+       _onRootRemoved = onRootRemoved,
+       _rootNodes = initialNodes {
     _initToDict(null, _rootNodes);
   }
 
@@ -15,6 +22,15 @@ class TreeController extends ChangeNotifier {
       _nodeDict[node.identifier] = node;
     }
   }
+
+  ///A callback to preform sideeffects (I.E. Sync with a remote database) when a child is added to a node
+  final void Function(TreeNode parent, TreeNode child)? _onChildAttached;
+
+  ///A callback to preform sideeffects (I.E. Sync with a remote database) when a child is removed from a node
+  final void Function(TreeNode parent, TreeNode child)? _onChildRemoved;
+
+  ///A callback to preform sideeffects (I.E. Sync with a remote database) when a root in the tree is removed
+  final void Function(TreeNode node)? _onRootRemoved;
 
   int get rootCount => _rootNodes.length;
 
@@ -58,11 +74,13 @@ class TreeController extends ChangeNotifier {
   void remove(TreeNode node) {
     if (node.parent == null) {
       _rootNodes.remove(node);
+      if (_onRootRemoved != null) _onRootRemoved(node);
       notifyListeners();
       return;
     }
     node.parent?.children.remove(node);
     _nodeDict.remove(node.identifier);
+    if (_onChildRemoved != null) _onChildRemoved(node.parent!, node);
     notifyListeners();
   }
 
@@ -110,6 +128,9 @@ class TreeNode<T extends Object?> {
     children = [...children, child];
     child.parent = this;
     child._controller = _controller;
+    if (_controller!._onChildAttached != null) {
+      _controller!._onChildAttached!(this, child);
+    }
     _controller!._nodeDict[identifier] = this;
     _controller!._notifyListeners();
   }
