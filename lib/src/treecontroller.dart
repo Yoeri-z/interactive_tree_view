@@ -109,6 +109,7 @@ class TreeNode<T extends Object?> {
     );
     children = [...children, child];
     child.parent = this;
+    child._controller = _controller;
     _controller!._nodeDict[identifier] = this;
     _controller!._notifyListeners();
   }
