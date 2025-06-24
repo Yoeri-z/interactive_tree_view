@@ -10,7 +10,7 @@ class TreeController extends ChangeNotifier {
   void _initToDict(TreeNode? parent, List<TreeNode> nodes) {
     for (final node in nodes) {
       _initToDict(node, node.children);
-      node._parent = parent;
+      node.parent = parent;
       node._controller = this;
       _nodeDict[node.identifier] = node;
     }
@@ -26,10 +26,10 @@ class TreeController extends ChangeNotifier {
   }
 
   void swap(TreeNode node1, TreeNode node2) {
-    node1._parent!.children
+    node1.parent!.children
       ..remove(node1)
       ..add(node2);
-    node2._parent!.children
+    node2.parent!.children
       ..remove(node2)
       ..add(node1);
     notifyListeners();
@@ -56,12 +56,12 @@ class TreeController extends ChangeNotifier {
   }
 
   void remove(TreeNode node) {
-    if (node._parent == null) {
+    if (node.parent == null) {
       _rootNodes.remove(node);
       notifyListeners();
       return;
     }
-    node._parent?.children.remove(node);
+    node.parent?.children.remove(node);
     _nodeDict.remove(node.identifier);
     notifyListeners();
   }
@@ -99,7 +99,7 @@ class TreeNode<T extends Object?> {
   bool expanded;
 
   List<TreeNode> children;
-  TreeNode? _parent;
+  TreeNode? parent;
   TreeController? _controller;
 
   void attachChild<U>(TreeNode<U> child) {
@@ -108,7 +108,7 @@ class TreeNode<T extends Object?> {
       'Cannot attach nodes to eachother if they are not in a tree controller',
     );
     children = [...children, child];
-    child._parent = this;
+    child.parent = this;
     _controller!._nodeDict[identifier] = this;
     _controller!._notifyListeners();
   }
