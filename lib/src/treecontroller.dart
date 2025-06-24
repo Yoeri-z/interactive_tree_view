@@ -102,7 +102,7 @@ class TreeNode<T extends Object?> {
   TreeNode? _parent;
   TreeController? _controller;
 
-  void attachChild(TreeNode child) {
+  void attachChild<U>(TreeNode<U> child) {
     assert(
       _controller != null,
       'Cannot attach nodes to eachother if they are not in a tree controller',
