@@ -3,11 +3,21 @@ part of 'treeview.dart';
 class TreeController extends ChangeNotifier {
   TreeController({
     required List<TreeNode> initialNodes,
+
+    ///A callback to preform sideeffects (I.E. Sync with a remote database) when a child is added to a node
     void Function(TreeNode parent, TreeNode child)? onChildAttached,
+
+    ///A callback to preform sideeffects (I.E. Sync with a remote database) when a child is removed from a node
     void Function(TreeNode parent, TreeNode child)? onChildRemoved,
+
+    ///A callback to preform sideeffects (I.E. Sync with a remote database) when a root in the tree is added
+    void Function(TreeNode node)? onRootAdded,
+
+    ///A callback to preform sideeffects (I.E. Sync with a remote database) when a root in the tree is removed
     void Function(TreeNode node)? onRootRemoved,
   }) : _onChildAttached = onChildAttached,
        _onChildRemoved = onChildRemoved,
+       _onRootAdded = onRootAdded,
        _onRootRemoved = onRootRemoved,
        _rootNodes = initialNodes {
     _initToDict(null, _rootNodes);
@@ -23,13 +33,12 @@ class TreeController extends ChangeNotifier {
     }
   }
 
-  ///A callback to preform sideeffects (I.E. Sync with a remote database) when a child is added to a node
   final void Function(TreeNode parent, TreeNode child)? _onChildAttached;
 
-  ///A callback to preform sideeffects (I.E. Sync with a remote database) when a child is removed from a node
   final void Function(TreeNode parent, TreeNode child)? _onChildRemoved;
 
-  ///A callback to preform sideeffects (I.E. Sync with a remote database) when a root in the tree is removed
+  final void Function(TreeNode node)? _onRootAdded;
+
   final void Function(TreeNode node)? _onRootRemoved;
 
   int get rootCount => _rootNodes.length;
@@ -93,6 +102,7 @@ class TreeController extends ChangeNotifier {
 
   void addRoot(TreeNode node) {
     _rootNodes.add(node);
+    if (_onRootAdded != null) _onRootAdded(node);
     notifyListeners();
   }
 
