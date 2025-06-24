@@ -52,30 +52,24 @@ class _TreeViewState extends State<TreeView> {
             if (node.children.isEmpty)
               widget.leafItemBuilder(context, node)
             else
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: widget.spacing / 2),
-                child: AnimatedCrossFade(
-                  firstChild: Padding(
-                    padding: EdgeInsets.symmetric(vertical: widget.spacing / 2),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        widget.nodeItemBuilder(context, node),
-                        Padding(
-                          padding: EdgeInsets.only(left: widget.rowExtent),
-                          child: expandedNodeBuilder(context, node.children),
-                        ),
-                      ],
+              AnimatedCrossFade(
+                firstChild: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    widget.nodeItemBuilder(context, node),
+                    Padding(
+                      padding: EdgeInsets.only(left: widget.rowExtent),
+                      child: expandedNodeBuilder(context, node.children),
                     ),
-                  ),
-                  secondChild: widget.nodeItemBuilder(context, node),
-                  crossFadeState:
-                      node.expanded
-                          ? CrossFadeState.showFirst
-                          : CrossFadeState.showSecond,
-                  duration:
-                      widget.animationDuration ?? Duration(milliseconds: 150),
+                  ],
                 ),
+                secondChild: widget.nodeItemBuilder(context, node),
+                crossFadeState:
+                    node.expanded
+                        ? CrossFadeState.showFirst
+                        : CrossFadeState.showSecond,
+                duration:
+                    widget.animationDuration ?? Duration(milliseconds: 150),
               ),
         ],
       ),
