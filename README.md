@@ -1,4 +1,4 @@
-# 🌳 Flutter TreeView
+# 🌳 A (not yet Draggale) TreeView
 
 A simple and extensible TreeView widget for Flutter with support for dynamic updates, custom node rendering, and animations.
 
