@@ -79,7 +79,7 @@ class _TreeViewState extends State<TreeView> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: expandedNodeBuilder(context, widget.controller._rootNodes),
+      child: expandedNodeBuilder(context, widget.controller.rootNodes),
     );
   }
 }

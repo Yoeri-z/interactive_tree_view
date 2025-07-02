@@ -19,11 +19,11 @@ class TreeController extends ChangeNotifier {
        _onChildRemoved = onChildRemoved,
        _onRootAdded = onRootAdded,
        _onRootRemoved = onRootRemoved,
-       _rootNodes = initialNodes {
-    _initToDict(null, _rootNodes);
+       rootNodes = initialNodes {
+    _initToDict(null, rootNodes);
   }
 
-  ///Flatly maps the [_rootNodes] to the [_nodeDict]
+  ///Flatly maps the [rootNodes] to the [_nodeDict]
   void _initToDict(TreeNode? parent, List<TreeNode> nodes) {
     for (final node in nodes) {
       _initToDict(node, node.children);
@@ -41,9 +41,9 @@ class TreeController extends ChangeNotifier {
 
   final void Function(TreeNode node)? _onRootRemoved;
 
-  int get rootCount => _rootNodes.length;
+  int get rootCount => rootNodes.length;
 
-  final List<TreeNode> _rootNodes;
+  final List<TreeNode> rootNodes;
   final _nodeDict = HashMap<Object, TreeNode>();
 
   void _notifyListeners() {
@@ -72,7 +72,7 @@ class TreeController extends ChangeNotifier {
 
   void move(TreeNode node, TreeNode? newParent) {
     if (newParent == null) {
-      _rootNodes.add(node);
+      rootNodes.add(node);
     } else {
       newParent.children.add(node);
     }
@@ -82,7 +82,7 @@ class TreeController extends ChangeNotifier {
 
   void remove(TreeNode node) {
     if (node.parent == null) {
-      _rootNodes.remove(node);
+      rootNodes.remove(node);
       if (_onRootRemoved != null) _onRootRemoved(node);
       notifyListeners();
       return;
@@ -101,7 +101,7 @@ class TreeController extends ChangeNotifier {
   }
 
   void addRoot(TreeNode node) {
-    _rootNodes.add(node);
+    rootNodes.add(node);
     node._controller = this;
     _nodeDict[node.identifier] = node;
     if (_onRootAdded != null) _onRootAdded(node);
