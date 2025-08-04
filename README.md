@@ -23,11 +23,12 @@ final controller = TreeController(
 
 TreeView(
   controller: controller,
-  leafItemBuilder: (context, node) => Text(node.data.toString()),
-  nodeItemBuilder: (context, node) => ListTile(
-    title: Text(node.data.toString()),
-    onTap: node.toggle,
-  ),
+  itemBuilder: (context, node) => node.isLeaf ? 
+    Text(node.data.toString()):
+    ListTile(
+      title: Text(node.data.toString()),
+      onTap: node.toggle,
+    ),
 );
 ```
 
@@ -59,6 +60,7 @@ TreeView(
 - `children`: List of child nodes
 - `expanded`: Whether the node is expanded
 - `attachChild(node)` : attach a child to the node
+- `isLeaf` : a getter boolean that indicates wether the node is a leaf or not.
 - Functions on the visual expansion of the node: `expand()`, `collapse()`, `toggle()`
 
 All these methods will automatically update the treeview widgets attached to the controller.

@@ -75,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
         padding: const EdgeInsets.all(8.0),
         child: TreeView(
           controller: controller,
-          nodeItemBuilder:
+          itemBuilder:
               (context, node) => Material(
                 borderRadius: BorderRadius.circular(4),
                 color: Theme.of(context).colorScheme.primaryContainer,
@@ -95,39 +95,15 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () => controller.remove(node),
                           icon: Icon(Icons.remove),
                         ),
-                        IconButton(
-                          onPressed: node.toggle,
-                          icon: Icon(
-                            node.expanded
-                                ? Icons.arrow_drop_up
-                                : Icons.arrow_drop_down,
+                        if (node.isNode)
+                          IconButton(
+                            onPressed: node.toggle,
+                            icon: Icon(
+                              node.expanded
+                                  ? Icons.arrow_drop_up
+                                  : Icons.arrow_drop_down,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          leafItemBuilder:
-              (context, node) => Material(
-                borderRadius: BorderRadius.circular(4),
-                color: Theme.of(context).colorScheme.primaryContainer,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Row(
-                      children: [
-                        Text(node.data!.toString()),
-                        Spacer(),
-                        IconButton(
-                          onPressed: () => _onAdd(node),
-                          icon: Icon(Icons.add),
-                        ),
-                        IconButton(
-                          onPressed: () => controller.remove(node),
-                          icon: Icon(Icons.remove),
-                        ),
                       ],
                     ),
                   ),

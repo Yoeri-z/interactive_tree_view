@@ -1,23 +1,18 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
-
-part 'treecontroller.dart';
+import 'package:treeview_draggable/treeview_draggable.dart';
 
 class TreeView extends StatefulWidget {
   const TreeView({
     super.key,
     required this.controller,
-    required this.leafItemBuilder,
-    required this.nodeItemBuilder,
+    required this.itemBuilder,
     this.rowExtent = 8.0,
     this.spacing = 8.0,
     this.animationDuration,
   });
 
   final TreeController controller;
-  final Widget Function(BuildContext context, TreeNode node) leafItemBuilder;
-  final Widget Function(BuildContext context, TreeNode node) nodeItemBuilder;
+  final Widget Function(BuildContext context, TreeNode node) itemBuilder;
   final double rowExtent;
   final double spacing;
   final Duration? animationDuration;
@@ -50,20 +45,20 @@ class _TreeViewState extends State<TreeView> {
         children: [
           for (final node in nodes)
             if (node.children.isEmpty)
-              widget.leafItemBuilder(context, node)
+              widget.itemBuilder(context, node)
             else
               AnimatedCrossFade(
                 firstChild: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    widget.nodeItemBuilder(context, node),
+                    widget.itemBuilder(context, node),
                     Padding(
                       padding: EdgeInsets.only(left: widget.rowExtent),
                       child: expandedNodeBuilder(context, node.children),
                     ),
                   ],
                 ),
-                secondChild: widget.nodeItemBuilder(context, node),
+                secondChild: widget.itemBuilder(context, node),
                 crossFadeState:
                     node.expanded
                         ? CrossFadeState.showFirst
