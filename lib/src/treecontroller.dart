@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:treeview_draggable/src/treeview.dart';
 
 class TreeController extends ChangeNotifier {
   TreeController({
@@ -22,16 +23,17 @@ class TreeController extends ChangeNotifier {
        _onRootAdded = onRootAdded,
        _onRootRemoved = onRootRemoved,
        rootNodes = initialNodes {
-    _initToDict(null, rootNodes);
+    _initToDict(null, rootNodes, 0);
   }
 
   ///Flatly maps the [rootNodes] to the [_nodeDict]
-  void _initToDict(TreeNode? parent, List<TreeNode> nodes) {
+  void _initToDict(TreeNode? parent, List<TreeNode> nodes, int depth) {
     for (final node in nodes) {
-      _initToDict(node, node.children);
+      _initToDict(node, node.children, depth + 1);
       node.parent = parent;
       node._controller = this;
       _nodeDict[node.identifier] = node;
+      node.depth = depth;
     }
   }
 
@@ -82,16 +84,17 @@ class TreeController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void remove(TreeNode node) {
+  void remove(TreeNode node, {bool notify = true}) {
     if (node.parent == null) {
-      rootNodes.remove(node);
-      if (_onRootRemoved != null) _onRootRemoved(node);
-      notifyListeners();
+      final removed = rootNodes.remove(node);
+      if (_onRootRemoved != null && removed) _onRootRemoved(node);
+      if (notify) notifyListeners();
       return;
     }
-    node.parent?.children.remove(node);
+    final removed = node.parent!.children.remove(node);
+    node.parent = null;
     _nodeDict.remove(node.identifier);
-    if (_onChildRemoved != null) _onChildRemoved(node.parent!, node);
+    if (_onChildRemoved != null && removed) _onChildRemoved(node.parent!, node);
     notifyListeners();
   }
 
@@ -121,16 +124,25 @@ class TreeNode<T extends Object?> {
   TreeNode(
     this.identifier,
     this.data, {
-    this.children = const [],
+    this.draggable = true,
+    List<TreeNode>? children,
     this.expanded = true,
-  });
+  }) {
+    this.children = children ?? List.empty(growable: true);
+  }
 
   final Object identifier;
-  T data;
 
+  bool draggable;
+  bool isBeingDragged = false;
+  int depth = 0;
+  T data;
   bool expanded;
 
-  List<TreeNode> children;
+  WidgetPositionProvider? _positionProvider;
+
+  late List<TreeNode> children;
+
   List<TreeNode> get siblings {
     assert(
       _controller != null,
@@ -146,19 +158,41 @@ class TreeNode<T extends Object?> {
   bool get isLeaf => children.isEmpty;
   bool get isNode => children.isNotEmpty;
 
-  void attachChild<U>(TreeNode<U> child) {
+  void attachChild<U>(TreeNode<U> child, {int? index, bool notify = true}) {
     assert(
       _controller != null,
       'Cannot attach nodes to eachother if they are not in a tree controller',
     );
-    children = [...children, child];
+    children.insert(index ?? children.length, child);
     child.parent = this;
     child._controller = _controller;
     if (_controller!._onChildAttached != null) {
       _controller!._onChildAttached!(this, child);
     }
     _controller!._nodeDict[identifier] = this;
-    _controller!._notifyListeners();
+    if (notify) _controller!._notifyListeners();
+  }
+
+  ///Adds a sibling next to [this] node
+  void attachSibling<U>(TreeNode<U> node) {
+    assert(
+      _controller != null,
+      'Cannot attach nodes to eachother if they are not in a tree controller',
+    );
+    if (parent != null) {
+      final thisIndex = parent!.children.indexOf(this);
+      parent!.attachChild(node, index: thisIndex + 1);
+    } else {
+      _controller!.addRoot(node);
+    }
+  }
+
+  void detachChild<U>(TreeNode<U> child, {bool notify = true}) {
+    assert(
+      _controller != null,
+      'Cannot detach nodes if they are not in a tree controller',
+    );
+    _controller!.remove(child, notify: notify);
   }
 
   void moveUp() {
@@ -206,6 +240,22 @@ class TreeNode<T extends Object?> {
     );
     expanded = !expanded;
     _controller!._notifyListeners();
+  }
+
+  void registerPositionProvider(WidgetPositionProvider provider) {
+    _positionProvider = provider;
+  }
+
+  void deRegisterPositionProvider() {
+    _positionProvider = null;
+  }
+
+  Offset? getNodeGlobalOffset() {
+    return _positionProvider?.getGlobalOffset();
+  }
+
+  Size? getNodeSize() {
+    return _positionProvider?.getObjectSize();
   }
 }
 
