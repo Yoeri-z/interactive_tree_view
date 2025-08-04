@@ -39,6 +39,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       TreeNode(2, 'test 2'),
     ],
+    onChildAttached: (parent, child) {
+      print('parent ${parent.data}');
+      print('child ${child.data}');
+    },
   );
 
   void _onAdd(TreeNode parent) async {
