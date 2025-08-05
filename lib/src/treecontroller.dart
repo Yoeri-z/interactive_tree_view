@@ -155,6 +155,7 @@ class TreeNode<T extends Object?> {
   TreeNode? parent;
   TreeController? _controller;
 
+  int get index => siblings.indexOf(this);
   bool get isLeaf => children.isEmpty;
   bool get isNode => children.isNotEmpty;
 
@@ -256,32 +257,5 @@ class TreeNode<T extends Object?> {
 
   Size? getNodeSize() {
     return _positionProvider?.getObjectSize();
-  }
-}
-
-extension Swap<T> on List<T> {
-  ///swaps two elements in the list
-  ///If the list contains both objects this returns `True`.
-  ///If the list did not contain both objects this returns `False`
-  bool swap(T obj1, T obj2) {
-    int indexObj1 = -1;
-    int indexObj2 = -1;
-    for (final (index, obj) in indexed) {
-      if (obj1 == obj) {
-        indexObj1 = index;
-      }
-      if (obj2 == obj) {
-        indexObj2 == index;
-      }
-    }
-
-    if (indexObj1 == -1 || indexObj2 == -1) {
-      return false;
-    }
-
-    this[indexObj1] = obj2;
-    this[indexObj2] = obj1;
-
-    return true;
   }
 }

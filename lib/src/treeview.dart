@@ -221,58 +221,65 @@ class _NodeWidgetState extends State<NodeWidget>
         }
       },
       builder: (context, candidate, _) {
-        return candidate.isEmpty && !isBeingDragged
-            ? Draggable(
-              data: widget.node,
-              onDragStarted: () {
-                widget.node.collapse();
-                widget.node.isBeingDragged = true;
-                isBeingDragged = true;
-                if (mounted) setState(() {});
-              },
-              onDragEnd: (details) {
-                widget.node.isBeingDragged = false;
-                isBeingDragged = false;
-                if (mounted) setState(() {});
-              },
-              onDraggableCanceled: (velocity, offset) {
-                widget.node.isBeingDragged = false;
-                isBeingDragged = false;
-                if (mounted) setState(() {});
-              },
-              onDragCompleted: () {
-                widget.node.isBeingDragged = false;
-                isBeingDragged = false;
-                if (mounted) setState(() {});
-              },
-              feedback: SizedBox(
-                width: 700,
-                child: widget.itemBuilder(context, widget.node),
+        if (widget.node.identifier == 2) {
+          print('Being dragged: $isBeingDragged');
+          print('Node being dragged: ${widget.node.isBeingDragged}');
+        }
+        if (isBeingDragged || widget.node.isBeingDragged) {
+          if (widget.node.identifier == 2) {
+            print('Building empty widget');
+          }
+          return SizedBox();
+        }
+        if (candidate.isEmpty) {
+          return Draggable(
+            data: widget.node,
+            onDragStarted: () {
+              widget.node.collapse();
+              widget.node.isBeingDragged = true;
+              isBeingDragged = true;
+              if (mounted) setState(() {});
+            },
+            onDragEnd: (details) {
+              widget.node.isBeingDragged = false;
+              isBeingDragged = false;
+              widget.node.expand();
+            },
+            onDraggableCanceled: (velocity, offset) {
+              widget.node.isBeingDragged = false;
+              isBeingDragged = false;
+              widget.node.expand();
+            },
+            onDragCompleted: () {
+              widget.node.isBeingDragged = false;
+              isBeingDragged = false;
+              widget.node.expand();
+            },
+            feedback: SizedBox(
+              width: 700,
+              child: widget.itemBuilder(context, widget.node),
+            ),
+            child: widget.itemBuilder(context, widget.node),
+          );
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: widget.spacing,
+          children: [
+            widget.itemBuilder(context, widget.node),
+            Padding(
+              padding:
+                  indentIndicator
+                      ? EdgeInsets.only(left: widget.rowExtent)
+                      : EdgeInsets.zero,
+              child: Material(
+                color: Colors.grey,
+                child: SizedBox(width: double.infinity, height: 15),
               ),
-              child:
-                  isBeingDragged
-                      ? SizedBox()
-                      : widget.itemBuilder(context, widget.node),
-            )
-            : isBeingDragged
-            ? SizedBox()
-            : Column(
-              mainAxisSize: MainAxisSize.min,
-              spacing: widget.spacing,
-              children: [
-                widget.itemBuilder(context, widget.node),
-                Padding(
-                  padding:
-                      indentIndicator
-                          ? EdgeInsets.only(left: widget.rowExtent)
-                          : EdgeInsets.zero,
-                  child: Material(
-                    color: Colors.grey,
-                    child: SizedBox(width: double.infinity, height: 15),
-                  ),
-                ),
-              ],
-            );
+            ),
+          ],
+        );
       },
     );
   }
