@@ -221,14 +221,7 @@ class _NodeWidgetState extends State<NodeWidget>
         }
       },
       builder: (context, candidate, _) {
-        if (widget.node.identifier == 2) {
-          print('Being dragged: $isBeingDragged');
-          print('Node being dragged: ${widget.node.isBeingDragged}');
-        }
         if (isBeingDragged || widget.node.isBeingDragged) {
-          if (widget.node.identifier == 2) {
-            print('Building empty widget');
-          }
           return SizedBox();
         }
         if (candidate.isEmpty) {
