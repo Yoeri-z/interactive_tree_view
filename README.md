@@ -1,126 +1,82 @@
-# Treeview Draggable
 
-A simple and extensible TreeView widget for Flutter with support for dynamic updates, custom node rendering, and animations.
 
-## Features
+# TreeView Draggable
 
-- Nodes in the tree are drag and droppable
-- Automatic expand/collapse animations
-- Controller and Node based updates
-- Optionally manipulate nodes via unique identifiers
-- Do side-effects based on node position changes using listeners exposed by the `TreeController`
+A simple, extensible TreeView widget for Flutter with support for drag-and-drop, dynamic updates, custom node rendering, and animations.
 
-## 🧱 Example Usage
-
+## Example
+![GIF](https://imgur.com/48nqU2b)
 ```dart
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+final uuid = Uuid();
 
+class ExampleTreeView extends StatefulWidget {
+  const ExampleTreeView({super.key, required this.title});
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<ExampleTreeView> createState() => _ExampleTreeViewState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  //define a controller
+class _ExampleTreeViewState extends State<ExampleTreeView> {
   final controller = TreeController(
     initialNodes: [
       TreeNode(
-        //usually nodes will come from a database and thus have a unique id, for this example we use the
-        //uuid package to simulate that.
-        uuid4(),
-        //This is the payload of the node
-        'test 1',
-        children: [TreeNode(uuid4(), 'test 3'), TreeNode(uuid4(), 'test 4')],
+        uuid.v1(),
+        'node 1',
+        children: [
+          TreeNode(uuid.v1(), 'node 3'),
+          TreeNode(uuid.v1(), 'node 4'),
+        ],
       ),
-      TreeNode(uuid4(), 'test 2'),
+      TreeNode(uuid.v1(), 'node 2', children: [TreeNode(uuid.v1(), 'node 5')]),
     ],
-    //when a child is attached somewhere this callback will be executed
-    onChildAttached: (parent, child) {
-      print('parent ${parent.data}');
-      print('child ${child.data}');
+    onAttached: (node, parent) {
+      print('Attached node ${node.identifier}');
+    },
+    onMoved: (node, index, oldParent, newParent) {
+      print('Moved node ${node.identifier} to index $index');
+    },
+    onRemoved: (node, parent) {
+      print('Removed node ${node.identifier}');
     },
   );
 
-  @override
-  void dispose(){
-    controller.dispose();
-    super.dispose()
-  }
-
-  ///Call this to add a new child to a node
   void _onAdd(TreeNode parent) async {
-    //quick dialog that returns a string for payload
-    final result = await showDialog<String?>(
-      context: context,
-      builder: (context) {
-        String textValue = '';
-        return Dialog(
-          child: Column(
-            children: [
-              TextField(onChanged: (value) => textValue = value),
-              TextButton(
-                onPressed: () => Navigator.pop(context, textValue),
-                child: Text('Add'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    //create the treenode and attach it to the parent, the widget will automatically rebuild!
-    if (result != null) parent.attachChild(TreeNode( uuid4(), result));
+    // Show dialog to add a new node
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        //The TreeView widget allows us to display the tree inside the controller as a ui
-        child: TreeView(
-          controller: controller,
-          itemBuilder:
-              (context, node) => Material(
-                borderRadius: BorderRadius.circular(4),
-                color: Theme.of(context).colorScheme.primaryContainer,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Row(
-                      children: [
-                        Text(node.data!.toString()),
-                        Spacer(),
-                        IconButton(
-                          onPressed: () => _onAdd(node),
-                          icon: Icon(Icons.add),
-                        ),
-                        IconButton(
-                          onPressed: () => controller.remove(node),
-                          icon: Icon(Icons.remove),
-                        ),
-                        if (node.isNode)
-                          IconButton(
-                            //this will toggle the extension of the node
-                            onPressed: node.toggle,
-                            icon: Icon(
-                              node.expanded
-                                  ? Icons.arrow_drop_up
-                                  : Icons.arrow_drop_down,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+    return TreeView(
+      controller: controller,
+      nodeBuilder: (context, node) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        height: 48,
+        width: double.infinity,
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          children: [
+            Text(node.data!.toString()),
+            const Spacer(),
+            IconButton(
+              onPressed: () => _onAdd(node),
+              icon: const Icon(Icons.add),
+            ),
+            IconButton(
+              onPressed: () => controller.remove(node),
+              icon: const Icon(Icons.remove),
+            ),
+            if (node.isParent)
+              IconButton(
+                onPressed: node.toggle,
+                icon: Icon(
+                  node.expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
                 ),
               ),
+          ],
         ),
       ),
     );
@@ -128,133 +84,141 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 ```
 
-## API Overview
+## Features
 
-### `TreeView`
+- Drag-and-drop nodes
+- Expand / collapse animations
+- Controller- and node-based updates
+- Node lookup and manipulation via unique identifiers
+- Event listeners for node changes through `TreeController`
 
-| Constructor Property| Description                                       |
-|---------------------|---------------------------------------------------|
-| `controller`        | Required. Manages the tree structure.             |
-| `leafItemBuilder`   | Builder for nodes with no children.               |
-| `nodeItemBuilder`   | Builder for nodes with children.                  |
-| `rowExtent`         | Indentation for child nodes. Default: `8.0`.      |
-| `spacing`           | Vertical spacing between nodes. Default: `8.0`.   |
-| `animationDuration` | Optional expand/collapse animation duration.      |
+## Key terms
 
-### `TreeController`
+- **Node** — an element in the tree.
+  - **Parent node** — the node directly above a given node.
+  - **Sibling node** — a node sharing the same parent.
+  - **Child node** — a node directly under a given node.
+  - **Root node** — a node without a parent (depth 0).
+- **Depth** — number of steps from the node to a root node (root = 0).
+- **Indicator** — UI element shown while dragging that indicates the drop position.
 
+---
+
+## `TreeController`
+
+Manages nodes, their positions, and notifies listeners when changes occur.
+
+**Important:** movement and relationship methods require the node to be attached to the controller.
+
+### How nodes become attached
+
+- Provided via `initialNodes` in the controller constructor.
+- Added with `controller.addRoot(...)`.
+- Added with `node.addChild(...)`.
+- Added with `node.addSibling(...)`.
+
+### Constructor example
 ```dart
 final controller = TreeController(
-  initialNodes: [
-    TreeNode(
-      1,
-      'test 1',
-      children: [TreeNode(3, 'test 3'), TreeNode(4, 'test 4')],
-      ),
-      TreeNode(2, 'test 2'),
-    ],
-    onChildAttached: (parent, child) {
-      //do operations here when a node gets a (new) parent
-    },
-    onChildRemoved: (parent, child){
-      //do operations here when a node gets removed from its parent
-    }
-    onRootAdded: (node){
-      //do operations here when a node gets added as root to the tree (I.E. No parent node)
-    }
-    onRootRemoved: (node){
-      //do operations here when a root node gets removed
-    }
+  initialNodes: [...],
+  onAttached: (node, index, parent) {
+    // node: attached node
+    // index: position among siblings
+    // parent: parent node or null if root
+  },
+  onMoved: (node, index, oldParent, newParent) {
+    // called when an attached node is moved
+  },
+  onRemoved: (node, index, parent) {
+    // called when a node is removed/detached
+  },
 );
-
-//methods:
-
-//add a node to the root of the tree
-controller.addRoot(node)
-//remove a node from the tree (can be anywhere in the tree)
-controller.remove(node)
-//move a node to a new parent
-controller.move(node, newParent)
-//swap two nodes
-controller.swap(node1, node2)
-//get a node by identifier
-final node = controller.getByIdentifier(identifier)
 ```
 
-### `TreeNode`
+### methods
 ```dart
-///A node can be contructed as follows
-final node = TreeNode(
-  //a unique id
-  'asdfieqv',
-  //the payload of this node
-  'This is an awesome node',
-  //nodes that are a child to this node, can be null if the node has no child nodes
-  children: [
-    nodeA,
-    nodeB,
-    ...
-  ]
-  //wether this node can be dragged or not, defaults to true
-  draggable: true
-  //wether or not this node is expanded, defaults to true
-  expanded: true
-)
-
-//Once a node is attached to a controller (see the ###controller section) you can use the following props and methods:
-//the unique identifier of the node
-final id =node.identifier;
-//the data in the node
-final data = node.data;
-//the children of this node
-final children = node.children;
-//the parent of this node
-final parent = node.parent;
-//the siblings of this node
-final siblings = node.siblings;
-//the depth of this node (rootnodes are at 0 depth)
-final depth = node.depth;
-//wether or not this node is expanded
-final expanded = node.expanded;
-//wether or not the user is currently dragging this node
-final dragging = node.isBeingDragged;
-
-//methods:
-
-//attach a child to this node
-node.attachChild(childNode);
-//attach a sibling, this will put a node next to the node the method is called on
-node.attachSibling(node);
-//Move the node up 1 spot if possible
-node.moveUp();
-//Move the node down 1 spot if possible
-node.moveDown();
-//Expand the node
-node.expand();
-//collapse the node
-node.collapse();
-//toggle the node
-node.toggle();
-//get a possible pixel offset of the displayed widget belonging to the node
-//returns null if no widget is drawn
-final offset = node.getNodeGlobalOffset();
-//get a possible size for the displayed widget belonging to the node
-//returns null if no widget is drawn
-final size = node.getNodeSize();
-
+controller.getByIdentifier(id);
+controller.addRoot(node);
+controller.remove(node);
+controller.move(node, index, newParent: parentNode);
+controller.swap(node1, node2);
 ```
 
+---
 
+## Tree nodes (`TreeNode`)
 
+A `TreeNode` is an individual item. Construction alone does **not** attach it to a controller — attach it before using movement-related APIs.
 
-All these methods will automatically update the treeview widgets attached to the controller.
+### Constructor example
+```dart
+final node = TreeNode<String>(
+  uuid.v1(),                 // unique identifier
+  'Node data',               // payload
+  children: [nodeA, nodeB], // optional children
+  draggable: true,           // defaults to true
+  expanded: true,            // defaults to true
+);
+```
 
-## 📦 TODO before first release
-- Clean Up
-- Make node auto expand and collapse when hovered over
-- Lazy loading
-- Selection & highlight callbacks
+### Properties
+```dart
+node.identifier;     // unique id
+node.data;           // payload
+node.children;       // list of children
+node.parent;         // parent node (null for root)
+node.siblings;       // sibling list (attached nodes only)
+node.isParent;       // true when this node has children
+node.isNotParent;    // inverse of isParent
+node.depth;          // 0 = root
+node.expanded;       // whether this node is expanded
+node.isBeingDragged; // true when the node is currently dragged
+```
 
-## 📄 License
+### Methods
+```dart
+node.attachChild(childNode);
+node.attachSibling(siblingNode);
+node.moveUp();
+node.moveDown();
+node.move(index, parent: parentNode);
+node.swap(otherNode);
+node.expand();
+node.collapse();
+node.toggle();
+```
 
-MIT
+---
+
+## `TreeView` widget
+
+Displays a tree from a `TreeController`. Highly customizable — you can also build a custom UI by listening to the controller.
+
+### Constructor
+```dart
+TreeView(
+  //Controller to build from.
+  controller: controller,
+  //Builder that is used for each node.
+  nodeBuilder: (context, node) {},
+  //UI element shown while dragging that indicates the drop position.
+  indicator: const DefaultIndicator(height: 15),
+  //A builder to use if you want an indicator that depends on the node that is used as reference for its placement. 
+  indicatorBuilder: (context, referenceNode, placement) {},
+  indent: 8.0, // horizontal indent per depth (default 8.0).
+  spacing: 8.0, // vertical spacing between nodes
+  //The duration of the animation.
+  animationDuration: const Duration(milliseconds: 100),
+);
+```
+
+---
+
+## Misc.
+
+There are no built-in selection or highlighting utilities because this is quite trivial to implement. See the [example](https://github.com/Yoeri-z/interactive_tree_view/blob/master/example/lib/main.dart) in the repository for a suggested implementation.
+
+This widget was not built or tested for performance, until now i have not encountered any performance issues using the package. Since nodes are lazily loaded (only loaded when they will be on screen) performance should be quite good in general.
+
+---
+
