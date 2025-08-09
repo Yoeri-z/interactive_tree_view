@@ -1,5 +1,5 @@
-name: treeview_draggable
-description: "A new Flutter package project."
+name: interactive_tree_view
+description: "A flutter library for creating interactive treeviews and managing tree-like structures."
 version: 0.0.1
 homepage:
 
@@ -16,6 +16,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  test: ^1.25.15
 
 
 flutter:
