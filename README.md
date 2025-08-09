@@ -5,7 +5,7 @@
 A simple, extensible TreeView widget for Flutter with support for drag-and-drop, dynamic updates, custom node rendering, and animations.
 
 ## Example
-![Gif](readme_assets/demo.gif)
+![Gif](https://github.com/Yoeri-z/interactive_tree_view/blob/master/assets/demo.gif)
 ```dart
 final uuid = Uuid();
 
