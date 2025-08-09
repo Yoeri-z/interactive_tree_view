@@ -1,122 +1,235 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:treeview_draggable/src/treeview.dart';
 
 class TreeController extends ChangeNotifier {
   TreeController({
     required List<TreeNode> initialNodes,
 
-    ///A callback to preform sideeffects (I.E. Sync with a remote database) when a child is added to a node
-    void Function(TreeNode parent, TreeNode child)? onChildAttached,
+    ///A callback to preform sideeffects when a child is added to a node
+    void Function(TreeNode node, TreeNode? parent)? onAttached,
 
-    ///A callback to preform sideeffects (I.E. Sync with a remote database) when a child is removed from a node
-    void Function(TreeNode parent, TreeNode child)? onChildRemoved,
+    ///A callback to preform sideeffects when a child is removed from a node
+    void Function(TreeNode node, TreeNode? parent)? onRemoved,
 
-    ///A callback to preform sideeffects (I.E. Sync with a remote database) when a root in the tree is added
-    void Function(TreeNode node)? onRootAdded,
-
-    ///A callback to preform sideeffects (I.E. Sync with a remote database) when a root in the tree is removed
-    void Function(TreeNode node)? onRootRemoved,
-  }) : _onChildAttached = onChildAttached,
-       _onChildRemoved = onChildRemoved,
-       _onRootAdded = onRootAdded,
-       _onRootRemoved = onRootRemoved,
+    ///A callback to preform sideeffection when a node is moved to another location in the tree
+    ///the position parameter is the position the node has in the array of siblings.
+    ///
+    ///equal to node.index
+    void Function(
+      TreeNode node,
+      int position,
+      TreeNode? oldParent,
+      TreeNode? newParent,
+    )?
+    onMoved,
+  }) : _onAttached = onAttached,
+       _onRemoved = onRemoved,
+       _onMoved = onMoved,
        rootNodes = initialNodes {
     _initToDict(null, rootNodes, 0);
   }
 
-  ///Flatly maps the [rootNodes] to the [_nodeDict]
-  void _initToDict(TreeNode? parent, List<TreeNode> nodes, int depth) {
-    for (final node in nodes) {
-      _initToDict(node, node.children, depth + 1);
-      node.parent = parent;
-      node._controller = this;
-      _nodeDict[node.identifier] = node;
-      node.depth = depth;
-    }
-  }
+  final void Function(TreeNode node, TreeNode? parent)? _onAttached;
 
-  final void Function(TreeNode parent, TreeNode child)? _onChildAttached;
+  final void Function(TreeNode node, TreeNode? parent)? _onRemoved;
 
-  final void Function(TreeNode parent, TreeNode child)? _onChildRemoved;
+  final void Function(
+    TreeNode node,
+    int position,
+    TreeNode? oldParent,
+    TreeNode? newParent,
+  )?
+  _onMoved;
 
-  final void Function(TreeNode node)? _onRootAdded;
-
-  final void Function(TreeNode node)? _onRootRemoved;
-
+  ///The number of rootnodes in the tree managed by this controller.
   int get rootCount => rootNodes.length;
 
   final List<TreeNode> rootNodes;
-  final _nodeDict = HashMap<Object, TreeNode>();
+  final _nodeMap = HashMap<Object, TreeNode>();
+
+  ///Flatly maps the [rootNodes] to the [_nodeMap]
+  void _initToDict(TreeNode? parent, List<TreeNode> nodes, int depth) {
+    for (final node in nodes) {
+      node._parent = parent;
+      node._controller = this;
+      _nodeMap[node.identifier] = node;
+      node.depth = depth;
+      _initToDict(node, node.children, depth + 1);
+    }
+  }
 
   void _notifyListeners() {
     notifyListeners();
   }
 
-  void swap(TreeNode node1, TreeNode node2) {
-    node1.parent!.children
-      ..remove(node1)
-      ..add(node2);
-    node2.parent!.children
-      ..remove(node2)
-      ..add(node1);
-    notifyListeners();
+  ///Swap two nodes in the tree. This moves [node1] to the position of [node2] and [node2] to the position of [node1].
+  ///
+  ///This method will throw if [node1] and [node2] are not attached to the tree.
+  void swap(TreeNode node1, TreeNode node2, {bool notify = true}) {
+    assert(node1.isAttached && node2.isAttached, '''
+      Nodes must be attached in order for it to be able to be moved
+      ''');
+
+    final node1Siblings = node1.siblings;
+    final node2Siblings = node2.siblings;
+    final node1Index = node1.index;
+    final node2Index = node2.index;
+    final node1Parent = node1.parent;
+    final node2Parent = node2.parent;
+
+    node1Siblings.remove(node1);
+    node1Siblings.insert(node1Index, node2);
+    node2Siblings.remove(node2);
+    node2Siblings.insert(node2Index, node1);
+
+    node1._parent = node2Parent;
+    node2._parent = node1Parent;
+
+    if (_onMoved != null) {
+      _onMoved(node1, node2Index, node1Parent, node2Parent);
+      _onMoved(node2, node1Index, node2Parent, node1Parent);
+    }
+
+    if (notify) notifyListeners();
   }
 
-  void swapByIdentifier(Object identifier1, Object identifier2) {
-    final node1 = _nodeDict[identifier1];
-    final node2 = _nodeDict[identifier2];
+  ///Swap two nodes by their identifier.
+  ///
+  ///See the [swap] method for more details on the behaviour of swapping.
+  void swapByIdentifier(
+    Object identifier1,
+    Object identifier2, {
+    bool notify = true,
+  }) {
+    final node1 = _nodeMap[identifier1];
+    final node2 = _nodeMap[identifier2];
     assert(
       node1 != null && node2 != null,
-      'No nodes registered with these identifiers',
+      'No nodes attached with these identifiers',
     );
-    swap(node1!, node2!);
+    swap(node1!, node2!, notify: notify);
   }
 
-  void move(TreeNode node, TreeNode? newParent) {
+  ///Mode a node to a new position in the tree, takes the following arguments:
+  /// - node: the node to be moved
+  /// - index: the position the new node should be inserted at among its new siblings
+  /// - (optional) newParent: the new parent for this node, if null the node will be inserted in the root of the tree
+  ///
+  /// Index must be valid or this method will throw.
+  /// The node must also be attached to the tree controller.
+  void move(
+    TreeNode node,
+    int index, {
+    TreeNode? newParent,
+    bool notify = true,
+  }) {
+    assert(node.isAttached, '''
+      Node must be attached in order for it to be able to be moved
+      ''');
+
+    assert(index >= 0, 'Index must be greater than 0');
+    if (newParent != null) {
+      assert(
+        index <= newParent.children.length,
+        'Index must be within bounds 0 <= index <= new sibling array length',
+      );
+    }
     if (newParent == null) {
-      rootNodes.add(node);
-    } else {
-      newParent.children.add(node);
+      assert(
+        index <= rootCount,
+        'Index must be within bounds 0 <= index <= new sibling array length',
+      );
     }
 
-    notifyListeners();
+    node.siblings.remove(node);
+    final newSiblings = newParent?.children ?? rootNodes;
+    //TODO: handle the edgecase where the node.singlings list is the same as the newsiblings list
+    //index needs to be decremented by one if it is placed above itself,
+    //and all the nodes between the removed widgets index and the new inserted index need to be passed to the onMoved callback
+    if (newSiblings.length + 1 == index) {
+      index--;
+    }
+
+    final oldParent = node.parent;
+
+    node._parent = newParent;
+    newSiblings.insert(index, node);
+
+    if (_onMoved != null) {
+      _onMoved(node, index, oldParent, newParent);
+      for (final (subIndex, sibling)
+          in newSiblings.sublist(index + 1).indexed) {
+        _onMoved(sibling, subIndex + index + 1, sibling.parent, sibling.parent);
+      }
+    }
+    if (notify) notifyListeners();
   }
 
+  ///Remove a node from this tree
+  ///
+  ///Will throw if the node is not attached to the tree when the method is called
   void remove(TreeNode node, {bool notify = true}) {
-    if (node.parent == null) {
-      final removed = rootNodes.remove(node);
-      if (_onRootRemoved != null && removed) _onRootRemoved(node);
-      if (notify) notifyListeners();
-      return;
+    assert(node.isAttached, '''
+      Node must be attached in order for it to be able to be removed
+      ''');
+
+    final removed = node.siblings.remove(node);
+    final parent = node.parent;
+    node._parent = null;
+    _nodeMap.remove(node.identifier);
+    node._controller == null;
+    if (_onRemoved != null && removed) _onRemoved(node, parent);
+    if (notify) notifyListeners();
+  }
+
+  ///Remove a node from this tree by its identifier.
+  void removeByIdentifier(
+    Object identifier, {
+    bool notify = true,
+    bool throwIfNotFound = false,
+  }) {
+    final node = _nodeMap[identifier];
+    if (throwIfNotFound) {
+      assert(node != null, '''
+        No node was found with this identifier
+      ''');
     }
-    final removed = node.parent!.children.remove(node);
-    node.parent = null;
-    _nodeDict.remove(node.identifier);
-    if (_onChildRemoved != null && removed) _onChildRemoved(node.parent!, node);
-    notifyListeners();
+    if (node != null) remove(node, notify: notify);
   }
 
-  void removeByIdentifier(Object identifier) {
-    final node = _nodeDict[identifier];
-    assert(node != null, 'No node registered with this identifier');
-    remove(node!);
-    notifyListeners();
-  }
+  ///Add a node to the root of this tree
+  ///
+  ///If the node is already attached to the tree controller this method will throw.
+  void addRoot(TreeNode node, {bool notify = true}) {
+    assert(!node.isAttached, '''
+      A node with this identifier is already attached to the tree.
+      If you want to move a node use [move] instead. 
+      You can get the node with this identifier by calling [getByIdentifier(identifier)]
+      ''');
 
-  void addRoot(TreeNode node) {
     rootNodes.add(node);
     node._controller = this;
-    _nodeDict[node.identifier] = node;
-    if (_onRootAdded != null) _onRootAdded(node);
-    notifyListeners();
+    _nodeMap[node.identifier] = node;
+    if (_onAttached != null) _onAttached(node, null);
+    if (notify) notifyListeners();
   }
 
-  TreeNode getByIdentifier(Object identifier) {
-    final node = _nodeDict[identifier];
+  ///Get a node registered in this controller by its identifier.
+  ///
+  ///will throw if no corresponding node is found, if you are unsure wether the node will be available use
+  ///[maybeGetByIdentifier] instead
+  TreeNode getByIdentifier(Object identifier, {bool notify = true}) {
+    final node = _nodeMap[identifier];
     assert(node != null, 'No node registered with this identifier');
     return node!;
+  }
+
+  ///Get a node registered in this controller by its identifier.
+  ///Returns null if no corresponding node is found.
+  TreeNode? maybeGetByIdentifier(Object identifier) {
+    final node = _nodeMap[identifier];
+    return node;
   }
 }
 
@@ -131,131 +244,199 @@ class TreeNode<T extends Object?> {
     this.children = children ?? List.empty(growable: true);
   }
 
+  ///The identifier of this node.
   final Object identifier;
 
+  ///A flag indicating if the node can be dragged.
   bool draggable;
+
+  ///A flag indicating if the node is being dragged by the user.
   bool isBeingDragged = false;
+
+  ///The depth of this node, starting at 0 depth for the rootnodes of the tree.
   int depth = 0;
+
+  ///The data contained by this node.
   T data;
+
+  ///A flag indicating if the node should be expanded in the ui.
   bool expanded;
 
-  WidgetPositionProvider? _positionProvider;
+  ///A flag indicating if this node is attached to a tree controller.
+  bool get isAttached =>
+      _controller != null && _controller!._nodeMap[identifier] != null;
 
+  ///The children of this node
   late List<TreeNode> children;
 
+  ///The siblings of this node
   List<TreeNode> get siblings {
     assert(
-      _controller != null,
+      isAttached,
       'Cannot find siblings if this node is not in a tree controller',
     );
 
     return parent == null ? _controller!.rootNodes : parent!.children;
   }
 
-  TreeNode? parent;
+  ///The parent of this node
+  TreeNode? get parent => _parent;
+
+  TreeNode? _parent;
   TreeController? _controller;
 
+  ///The index this node has in its sibling array
   int get index => siblings.indexOf(this);
-  bool get isLeaf => children.isEmpty;
-  bool get isNode => children.isNotEmpty;
 
+  ///A flag indicating if this node is not a parent node (so a node with no child nodes)
+  bool get isNotParent => children.isEmpty;
+
+  ///A flag indicating if this node is a parent node (so a node with children)
+  bool get isParent => children.isNotEmpty;
+
+  ///A method to attach a child to this node. Use this to attach new nodes to the tree.
+  ///
+  ///This method will throw if the childnode is already in the tree or if the node this method is called on is not in the tree controller.
   void attachChild<U>(TreeNode<U> child, {int? index, bool notify = true}) {
     assert(
-      _controller != null,
+      isAttached,
       'Cannot attach nodes to eachother if they are not in a tree controller',
     );
+
+    assert(!child.isAttached, '''
+      A node with this identifier is already attached to the tree.
+      If you want to move a node use [moveTo] instead. 
+      You can get the node with this identifier by calling [getByIdentifier(identifier)] on the [TreeController]
+      ''');
+
     children.insert(index ?? children.length, child);
-    child.parent = this;
+    child._parent = this;
     child._controller = _controller;
-    if (_controller!._onChildAttached != null) {
-      _controller!._onChildAttached!(this, child);
+    if (_controller!._onAttached != null) {
+      _controller!._onAttached!(child, this);
     }
-    _controller!._nodeDict[identifier] = this;
+    _controller!._nodeMap[child.identifier] = child;
     if (notify) _controller!._notifyListeners();
   }
 
-  ///Adds a sibling next to [this] node
-  void attachSibling<U>(TreeNode<U> node) {
+  ///Adds a sibling next to [this] node.
+  ///Use this to attach new nodes to the tree.
+  ///
+  ///This method will throw if the node is already in the tree or if the node this method is called on is not in the tree controller.
+  void attachSibling<U>(TreeNode<U> node, {bool notify = true}) {
     assert(
       _controller != null,
       'Cannot attach nodes to eachother if they are not in a tree controller',
     );
-    if (parent != null) {
-      final thisIndex = parent!.children.indexOf(this);
-      parent!.attachChild(node, index: thisIndex + 1);
-    } else {
-      _controller!.addRoot(node);
+    assert(!node.isAttached, '''
+      A node with this identifier is already attached to the tree.
+      If you want to move a node use [moveTo] instead. 
+      You can get the node with this identifier by calling [getByIdentifier(identifier)] on the [TreeController]
+      ''');
+    siblings.insert(index + 1, node);
+    node._parent = parent;
+    node._controller = _controller;
+    if (_controller!._onAttached != null) {
+      _controller!._onAttached!(node, parent);
     }
+    _controller!._nodeMap[node.identifier] = node;
+    if (notify) _controller!._notifyListeners();
   }
 
-  void detachChild<U>(TreeNode<U> child, {bool notify = true}) {
+  ///Move this node to the [newParent] or the root of the tree if no [newParent] is supplied
+  ///
+  ///This method will throw if the node is not attached to a tree controller
+  void move(int index, {TreeNode? newParent, bool notify = true}) {
     assert(
-      _controller != null,
-      'Cannot detach nodes if they are not in a tree controller',
+      isAttached,
+      'Node must be attached to the tree in order for it to be moved',
     );
-    _controller!.remove(child, notify: notify);
+
+    _controller!.move(this, index, newParent: newParent);
   }
 
-  void moveUp() {
+  ///Move this node up one spot with respect to its siblings.
+  ///
+  ///This method will throw if the node is not attached to a tree controller
+  void moveUp({bool notify = true}) {
+    assert(
+      isAttached,
+      'Node must be attached to the tree in order for it to be moved',
+    );
     final index = siblings.indexOf(this);
 
     if (index <= 0) return;
 
     siblings[index] = siblings[index - 1];
     siblings[index - 1] = this;
+
+    if (_controller!._onMoved != null) {
+      _controller!._onMoved!(this, index - 1, parent, parent);
+      _controller!._onMoved!(siblings[index], index, parent, parent);
+    }
+
+    if (notify) _controller!._notifyListeners();
   }
 
-  void moveDown() {
+  ///Move this node down one spot with respect to its siblings.
+  ///
+  ///This method will throw if the node is not attached to a tree controller.
+  void moveDown({bool notify = true}) {
+    assert(
+      _controller != null,
+      'Cannot move nodes to if they are not in a tree controller',
+    );
+    assert(
+      isAttached,
+      'Node must be attached to the tree in order for it to be moved',
+    );
+
     final index = siblings.indexOf(this);
 
-    if (index == -1 || index == siblings.length - 1) return;
+    if (index == siblings.length - 1) return;
 
     siblings[index] = siblings[index + 1];
     siblings[index + 1] = this;
+
+    if (_controller!._onMoved != null) {
+      _controller!._onMoved!(this, index + 1, parent, parent);
+      _controller!._onMoved!(siblings[index], index, parent, parent);
+    }
+
+    if (notify) _controller!._notifyListeners();
   }
 
-  void expand() {
+  ///Expand this node in UI's.
+  void expand({bool notify = true}) {
     assert(
-      _controller != null,
-      'Cannot expand nodes to if they are not in a tree controller',
+      isAttached,
+      'Cannot expand nodes if they are not in a tree controller',
     );
-    expanded = true;
+    if (expanded) return;
 
-    _controller!._notifyListeners();
+    expanded = true;
+    if (notify) _controller!._notifyListeners();
   }
 
-  void collapse() {
+  ///Collapse this node in UI's.
+  void collapse({bool notify = true}) {
     assert(
       _controller != null,
       'Cannot collapse nodes if they are not in a tree controller',
     );
-    expanded = false;
+    if (!expanded) return;
 
-    _controller!._notifyListeners();
+    expanded = false;
+    if (notify) _controller!._notifyListeners();
   }
 
-  void toggle() {
+  ///Toggle the expansion of this node in UI's.
+  void toggle({bool notify = true}) {
     assert(
       _controller != null,
       'Cannot toggle nodes if they are not in a tree controller',
     );
     expanded = !expanded;
-    _controller!._notifyListeners();
-  }
-
-  void registerPositionProvider(WidgetPositionProvider provider) {
-    _positionProvider = provider;
-  }
-
-  void deRegisterPositionProvider() {
-    _positionProvider = null;
-  }
-
-  Offset? getNodeGlobalOffset() {
-    return _positionProvider?.getGlobalOffset();
-  }
-
-  Size? getNodeSize() {
-    return _positionProvider?.getObjectSize();
+    if (notify) _controller!._notifyListeners();
   }
 }
