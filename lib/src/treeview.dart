@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:interactive_tree_view/treeview_draggable.dart';
+import 'package:interactive_tree_view/interactive_tree_view.dart';
 
 //Use a props class so we dont have to copy all the styling fields into the constructors of each widget in the tree structure
 class _TreeViewProps {
