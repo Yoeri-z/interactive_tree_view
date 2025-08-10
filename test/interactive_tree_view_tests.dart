@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:interactive_tree_view/treeview_draggable.dart';
+import 'package:interactive_tree_view/interactive_tree_view.dart';
 
 void main() {
   group('TreeController & TreeNode', () {

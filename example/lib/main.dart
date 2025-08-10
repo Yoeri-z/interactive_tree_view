@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:interactive_tree_view/treeview_draggable.dart';
+import 'package:interactive_tree_view/interactive_tree_view.dart';
 import 'package:uuid/uuid.dart';
 
 final uuid = Uuid();
