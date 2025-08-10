@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:interactive_tree_view/treeview_draggable.dart';
 import 'package:uuid/uuid.dart';
 
+final uuid = Uuid();
+
 void main() {
   runApp(const MyApp());
 }
@@ -20,8 +22,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-final uuid = Uuid();
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -120,7 +120,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     }),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    color:
+                        (selectedNode?.identifier == node.identifier)
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   height: 48,
@@ -140,6 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       if (node.isParent)
                         IconButton(
+                          //this toggles the expansion of the node
                           onPressed: node.toggle,
                           icon: Icon(
                             node.expanded

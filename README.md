@@ -1,5 +1,3 @@
-
-
 # TreeView Draggable
 
 A simple, extensible TreeView widget for Flutter with support for drag-and-drop, dynamic updates, custom node rendering, and animations.
@@ -142,6 +140,9 @@ controller.addRoot(node);
 controller.remove(node);
 controller.move(node, index, newParent: parentNode);
 controller.swap(node1, node2);
+controller.traverse(action);
+controller.collapseAll();
+controller.expandAll();
 ```
 
 ---
@@ -170,7 +171,7 @@ node.parent;         // parent node (null for root)
 node.siblings;       // sibling list (attached nodes only)
 node.isParent;       // true when this node has children
 node.isNotParent;    // inverse of isParent
-node.depth;          // 0 = root
+node.depth;          // root depth = 0
 node.expanded;       // whether this node is expanded
 node.isBeingDragged; // true when the node is currently dragged
 ```
@@ -186,8 +187,8 @@ node.swap(otherNode);
 node.expand();
 node.collapse();
 node.toggle();
+node.traverse(action)
 ```
-
 ---
 
 ## `TreeView` widget
@@ -219,6 +220,8 @@ TreeView(
 There are no built-in selection or highlighting utilities because this is quite trivial to implement. See the [example](https://github.com/Yoeri-z/interactive_tree_view/blob/master/example/lib/main.dart) in the repository for a suggested implementation.
 
 This widget was not built or tested for performance, until now i have not encountered any performance issues using the package. Since nodes are lazily loaded (only loaded when they will be on screen) performance should be quite good in general.
+
+The package has full test coverage
 
 ---
 

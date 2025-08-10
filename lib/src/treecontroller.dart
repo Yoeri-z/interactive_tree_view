@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -94,23 +95,6 @@ class TreeController extends ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  ///Swap two nodes by their identifier.
-  ///
-  ///See the [swap] method for more details on the behaviour of swapping.
-  void swapByIdentifier(
-    Object identifier1,
-    Object identifier2, {
-    bool notify = true,
-  }) {
-    final node1 = _nodeMap[identifier1];
-    final node2 = _nodeMap[identifier2];
-    assert(
-      node1 != null && node2 != null,
-      'No nodes attached with these identifiers',
-    );
-    swap(node1!, node2!, notify: notify);
-  }
-
   ///Mode a node to a new position in the tree, takes the following arguments:
   /// - node: the node to be moved
   /// - index: the position the new node should be inserted at among its new siblings
@@ -142,28 +126,56 @@ class TreeController extends ChangeNotifier {
       );
     }
 
-    node.siblings.remove(node);
     final newSiblings = newParent?.children ?? rootNodes;
-    //TODO: handle the edgecase where the node.singlings list is the same as the newsiblings list
-    //index needs to be decremented by one if it is placed above itself,
-    //and all the nodes between the removed widgets index and the new inserted index need to be passed to the onMoved callback
-    if (newSiblings.length + 1 == index) {
-      index--;
-    }
 
-    final oldParent = node.parent;
+    if (node.siblings == newSiblings) {
+      final oldIndex = newSiblings.indexOf(node);
 
-    node._parent = newParent;
-    newSiblings.insert(index, node);
+      if (oldIndex == index) return;
 
-    if (_onMoved != null) {
-      _onMoved(node, index, oldParent, newParent);
-      for (final (subIndex, sibling)
-          in newSiblings.sublist(index + 1).indexed) {
-        _onMoved(sibling, subIndex + index + 1, sibling.parent, sibling.parent);
+      var targetIndex = index;
+
+      if (oldIndex < index) {
+        targetIndex--;
       }
+
+      newSiblings.removeAt(oldIndex);
+      newSiblings.insert(targetIndex, node);
+
+      if (_onMoved != null) {
+        for (
+          var i = math.min(oldIndex, targetIndex);
+          i <= math.max(oldIndex, targetIndex);
+          i++
+        ) {
+          if (i < newSiblings.length) {
+            _onMoved(newSiblings[i], i, node.parent, node.parent);
+          }
+        }
+      }
+
+      if (notify) notifyListeners();
+    } else {
+      final oldParent = node.parent;
+      node.siblings.remove(node);
+
+      node._parent = newParent;
+      newSiblings.insert(index, node);
+
+      if (_onMoved != null) {
+        _onMoved(node, index, oldParent, newParent);
+        for (final (subIndex, sibling)
+            in newSiblings.sublist(index + 1).indexed) {
+          _onMoved(
+            sibling,
+            subIndex + index + 1,
+            sibling.parent,
+            sibling.parent,
+          );
+        }
+      }
+      if (notify) notifyListeners();
     }
-    if (notify) notifyListeners();
   }
 
   ///Remove a node from this tree
@@ -181,21 +193,6 @@ class TreeController extends ChangeNotifier {
     node._controller == null;
     if (_onRemoved != null && removed) _onRemoved(node, parent);
     if (notify) notifyListeners();
-  }
-
-  ///Remove a node from this tree by its identifier.
-  void removeByIdentifier(
-    Object identifier, {
-    bool notify = true,
-    bool throwIfNotFound = false,
-  }) {
-    final node = _nodeMap[identifier];
-    if (throwIfNotFound) {
-      assert(node != null, '''
-        No node was found with this identifier
-      ''');
-    }
-    if (node != null) remove(node, notify: notify);
   }
 
   ///Add a node to the root of this tree
@@ -230,6 +227,25 @@ class TreeController extends ChangeNotifier {
   TreeNode? maybeGetByIdentifier(Object identifier) {
     final node = _nodeMap[identifier];
     return node;
+  }
+
+  ///Traverses all the nodes attached to the tree. Calling back [action] on each node hit.
+  void traverse(void Function(TreeNode) action) {
+    for (final node in _nodeMap.values) {
+      action(node);
+    }
+  }
+
+  ///Expands all nodes in the tree.
+  void expandAll({bool notify = true}) {
+    traverse((node) => node.expand(notify: false));
+    if (notify) notifyListeners();
+  }
+
+  ///Collapses all nodes in the tree.
+  void collapseAll({bool notify = true}) {
+    traverse((node) => node.collapse(notify: false));
+    if (notify) notifyListeners();
   }
 }
 
@@ -340,6 +356,12 @@ class TreeNode<T extends Object?> {
       _controller!._onAttached!(node, parent);
     }
     _controller!._nodeMap[node.identifier] = node;
+
+    if (_controller!._onMoved != null && index + 2 < siblings.length) {
+      for (final (i, sibling) in siblings.sublist(index + 2).indexed) {
+        _controller!._onMoved!(sibling, index + 2 + i, parent, parent);
+      }
+    }
     if (notify) _controller!._notifyListeners();
   }
 
@@ -438,5 +460,13 @@ class TreeNode<T extends Object?> {
     );
     expanded = !expanded;
     if (notify) _controller!._notifyListeners();
+  }
+
+  ///Travels this node and all its descendants. Calling back [action] on each node hit.
+  void traverse(void Function(TreeNode node) action) {
+    action(this);
+    for (final child in children) {
+      child.traverse(action);
+    }
   }
 }
