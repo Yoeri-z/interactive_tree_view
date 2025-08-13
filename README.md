@@ -144,6 +144,7 @@ controller.traverse(action);
 controller.collapseAll();
 controller.expandAll();
 ```
+For more details, see: [TreeController api reference](https://pub.dev/documentation/interactive_tree_view/latest/interactive_tree_view/TreeController-class.html)
 
 ---
 
@@ -189,6 +190,8 @@ node.collapse();
 node.toggle();
 node.traverse(action)
 ```
+For more details, see: [TreeNode api reference](https://pub.dev/documentation/interactive_tree_view/latest/interactive_tree_view/TreeController-class.html)
+
 ---
 
 ## `TreeView` widget

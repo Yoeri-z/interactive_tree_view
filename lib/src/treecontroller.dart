@@ -43,9 +43,10 @@ class TreeController extends ChangeNotifier {
   )?
   _onMoved;
 
-  ///The number of rootnodes in the tree managed by this controller.
+  ///The number of rootnodes in the tree.
   int get rootCount => rootNodes.length;
 
+  ///The rootnodes of this tree.
   final List<TreeNode> rootNodes;
   final _nodeMap = HashMap<Object, TreeNode>();
 

@@ -27,7 +27,16 @@ class _TreeViewProps {
   final Duration animationDuration;
 }
 
-enum Placement { above, below }
+///Indicates the placement of a ui element with respect to some other ui element.
+///
+///Used in the [TreeView.indicatorBuilder] to indicate the placement of the indicator with respect to the given node.
+enum Placement {
+  ///Placed above.
+  above,
+
+  ///Placed below.
+  below,
+}
 
 ///A widget used to render a treeview in the ui, based on the state of this tree inside the controller.
 class TreeView extends StatefulWidget {
@@ -58,8 +67,7 @@ class TreeView extends StatefulWidget {
   ///The builder provides 3 parameters:
   /// - BuildContext: The buildcontext this indicator is built in.
   /// - TreeNode: The node that the indicator uses as a reference to place itself.
-  ///   This can be either a sibling or a parent.
-  /// - Placement: the placement it will have in respect to [referenceNode].
+  /// - Placement: the placement it will have in respect to the given node.
   final Widget Function(
     BuildContext context,
     TreeNode referenceNode,
@@ -88,7 +96,7 @@ class TreeView extends StatefulWidget {
     indicatorBuilder: indicatorBuilder,
     rowExtent: rowExtent,
     spacing: spacing,
-    animationDuration: animationDuration ?? Duration(milliseconds: 150),
+    animationDuration: animationDuration ?? const Duration(milliseconds: 150),
   );
 
   @override
@@ -107,7 +115,8 @@ class _TreeViewState extends State<TreeView> {
   @override
   void didUpdateWidget(covariant TreeView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) return;
+    if (oldWidget.controller == widget.controller) return;
+
     oldWidget.controller.removeListener(listener);
     widget.controller.addListener(listener);
   }
@@ -124,6 +133,7 @@ class _TreeViewState extends State<TreeView> {
       itemCount: widget.controller.rootCount,
       itemBuilder:
           (context, index) => _NodeWidget(
+            key: ValueKey(widget.controller.rootNodes[index].identifier),
             node: widget.controller.rootNodes[index],
             props: widget._props,
           ),
@@ -132,7 +142,7 @@ class _TreeViewState extends State<TreeView> {
 }
 
 class _NodeWidget extends StatefulWidget {
-  const _NodeWidget({required this.node, required this.props});
+  const _NodeWidget({super.key, required this.node, required this.props});
 
   final TreeNode node;
   final _TreeViewProps props;
@@ -152,9 +162,8 @@ class _NodeWidgetState extends State<_NodeWidget> {
 
   Placement getIndicatorPlacement(DragTargetDetails<TreeNode> details) {
     final offset = getGlobalOffset();
-    final size = getObjectSize();
 
-    final isAbove = details.offset.dy < offset!.dy + size!.height / 3;
+    final isAbove = details.offset.dy < offset!.dy;
 
     if (isAbove) {
       return Placement.above;
@@ -213,9 +222,9 @@ class _NodeWidgetState extends State<_NodeWidget> {
                     ? Draggable(
                       data: widget.node,
                       onDragStarted: () {
-                        widget.node.collapse();
                         widget.node.isBeingDragged = true;
                         isBeingDragged = true;
+                        widget.node.collapse();
                       },
                       onDragEnd: (_) => _resetDrag(),
                       onDraggableCanceled: (_, __) => _resetDrag(),
@@ -268,7 +277,11 @@ class _NodeWidgetState extends State<_NodeWidget> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           for (final child in widget.node.children)
-                            _NodeWidget(node: child, props: widget.props),
+                            _NodeWidget(
+                              key: ValueKey(child.identifier),
+                              node: child,
+                              props: widget.props,
+                            ),
                         ],
                       ),
                     )
