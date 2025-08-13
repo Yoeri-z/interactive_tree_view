@@ -180,7 +180,7 @@ class _NodeWidgetState extends State<_NodeWidget> {
     }
   }
 
-  void _resetDrag() {
+  void resetDrag() {
     widget.node.expand(notify: false);
     widget.node.isBeingDragged = false;
     isBeingDragged = false;
@@ -239,9 +239,9 @@ class _NodeWidgetState extends State<_NodeWidget> {
                         isBeingDragged = true;
                         widget.node.collapse();
                       },
-                      onDragEnd: (_) => _resetDrag(),
-                      onDraggableCanceled: (_, __) => _resetDrag(),
-                      onDragCompleted: () => _resetDrag(),
+                      onDragEnd: (_) => resetDrag(),
+                      onDraggableCanceled: (_, __) => resetDrag(),
+                      onDragCompleted: () => resetDrag(),
                       feedback: Material(
                         child: SizedBox(
                           width: getObjectSize()?.width ?? 500,
