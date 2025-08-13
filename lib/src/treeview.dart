@@ -8,7 +8,7 @@ class _TreeViewProps {
     required this.itemBuilder,
     required this.indicator,
     this.indicatorBuilder,
-    required this.rowExtent,
+    required this.childExtent,
     required this.spacing,
     required this.animationDuration,
   });
@@ -22,12 +22,12 @@ class _TreeViewProps {
   )?
   indicatorBuilder;
   final Widget indicator;
-  final double rowExtent;
+  final double childExtent;
   final double spacing;
   final Duration animationDuration;
 }
 
-///Indicates the placement of a ui element with respect to some other ui element.
+///Indicates the placement of a node with respect to another node.
 ///
 ///Used in the [TreeView.indicatorBuilder] to indicate the placement of the indicator with respect to the given node.
 enum Placement {
@@ -36,6 +36,9 @@ enum Placement {
 
   ///Placed below.
   below,
+
+  ///Placed as child.
+  child,
 }
 
 ///A widget used to render a treeview in the ui, based on the state of this tree inside the controller.
@@ -47,7 +50,7 @@ class TreeView extends StatefulWidget {
     required this.nodeBuilder,
     this.indicator = const DefaultIndicator(height: 15),
     this.indicatorBuilder,
-    this.rowExtent = 8.0,
+    this.childExtent = 8.0,
     this.spacing = 8.0,
     this.animationDuration,
   });
@@ -81,7 +84,7 @@ class TreeView extends StatefulWidget {
   final Widget indicator;
 
   ///The indent each child node has with respect to its parent.
-  final double rowExtent;
+  final double childExtent;
 
   ///The amount of space between nodes.
   final double spacing;
@@ -94,7 +97,7 @@ class TreeView extends StatefulWidget {
     itemBuilder: nodeBuilder,
     indicator: indicator,
     indicatorBuilder: indicatorBuilder,
-    rowExtent: rowExtent,
+    childExtent: childExtent,
     spacing: spacing,
     animationDuration: animationDuration ?? const Duration(milliseconds: 150),
   );
@@ -162,10 +165,15 @@ class _NodeWidgetState extends State<_NodeWidget> {
 
   Placement getIndicatorPlacement(DragTargetDetails<TreeNode> details) {
     final offset = getGlobalOffset();
+    final size = getObjectSize();
 
     final isAbove = details.offset.dy < offset!.dy;
 
-    if (isAbove) {
+    final isChild = details.offset.dx > offset.dx + size!.width / 2;
+
+    if (isChild) {
+      return Placement.child;
+    } else if (isAbove) {
       return Placement.above;
     } else {
       return Placement.below;
@@ -189,8 +197,13 @@ class _NodeWidgetState extends State<_NodeWidget> {
           DragTarget<TreeNode>(
             onAcceptWithDetails: (details) {
               final placement = getIndicatorPlacement(details);
-
-              if (placement == Placement.below) {
+              if (placement == Placement.child) {
+                widget.props.controller.move(
+                  details.data,
+                  0,
+                  newParent: widget.node,
+                );
+              } else if (placement == Placement.below) {
                 widget.props.controller.move(
                   details.data,
                   widget.node.index + 1,
@@ -251,6 +264,17 @@ class _NodeWidgetState extends State<_NodeWidget> {
                         ) ??
                         widget.props.indicator,
                   widget.props.itemBuilder(context, widget.node),
+                  if (indicatorPlacement == Placement.child)
+                    Padding(
+                      padding: EdgeInsets.only(left: widget.props.childExtent),
+                      child:
+                          widget.props.indicatorBuilder?.call(
+                            context,
+                            widget.node,
+                            indicatorPlacement!,
+                          ) ??
+                          widget.props.indicator,
+                    ),
                   if (indicatorPlacement == Placement.below)
                     widget.props.indicatorBuilder?.call(
                           context,
@@ -272,7 +296,7 @@ class _NodeWidgetState extends State<_NodeWidget> {
             child:
                 widget.node.expanded && !isBeingDragged
                     ? Padding(
-                      padding: EdgeInsets.only(left: widget.props.rowExtent),
+                      padding: EdgeInsets.only(left: widget.props.childExtent),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

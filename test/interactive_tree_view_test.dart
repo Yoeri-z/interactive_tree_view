@@ -223,20 +223,15 @@ void main() {
 
     setUp(() {
       events = [];
-      child1 = TreeNode('c1', 'child1', expanded: false);
-      child2 = TreeNode('c2', 'child2', expanded: false);
-      root1 = TreeNode(
-        'r1',
-        'root1',
-        children: [child1, child2],
-        expanded: false,
-      );
-      root2 = TreeNode('r2', 'root2', expanded: false);
+      child1 = TreeNode('c1', 'child1');
+      child2 = TreeNode('c2', 'child2');
+      root1 = TreeNode('r1', 'root1', children: [child1, child2]);
+      root2 = TreeNode('r2', 'root2');
 
-      root1Finder = find.byKey(ValueKey(root1.identifier));
-      root2Finder = find.byKey(ValueKey(root2.identifier));
-      child1Finder = find.byKey(ValueKey(child1.identifier));
-      child2Finder = find.byKey(ValueKey(child2.identifier));
+      root1Finder = find.byKey(ValueKey('${root1.identifier}_test'));
+      root2Finder = find.byKey(ValueKey('${root1.identifier}_test'));
+      child1Finder = find.byKey(ValueKey('${child1.identifier}_test'));
+      child2Finder = find.byKey(ValueKey('${child2.identifier}_test'));
 
       controller = TreeController(
         initialNodes: [root1, root2],
@@ -259,13 +254,24 @@ void main() {
         TestSetupWidget(
           child: TreeView(
             controller: controller,
-            rowExtent: 16,
+            childExtent: 16,
             nodeBuilder:
-                (context, node) =>
-                    NodeWidget(key: ValueKey(node.identifier), node: node),
+                (context, node) => NodeWidget(
+                  key: ValueKey('${node.identifier}_test'),
+                  node: node,
+                ),
           ),
         ),
       );
+
+      expect(root1Finder, findsOneWidget);
+      expect(root2Finder, findsOneWidget);
+      expect(child1Finder, findsOneWidget);
+      expect(child2Finder, findsOneWidget);
+
+      root1.collapse();
+
+      await tester.pumpAndSettle();
 
       expect(root1Finder, findsOneWidget);
       expect(root2Finder, findsOneWidget);
@@ -275,16 +281,55 @@ void main() {
       root1.expand();
 
       await tester.pumpAndSettle();
-
       expect(root1Finder, findsOneWidget);
       expect(root2Finder, findsOneWidget);
       expect(child1Finder, findsOneWidget);
       expect(child2Finder, findsOneWidget);
+    });
 
+    testWidgets('Child nodes are indented', (tester) async {
+      await tester.pumpWidget(
+        TestSetupWidget(
+          child: TreeView(
+            controller: controller,
+            childExtent: 16,
+            nodeBuilder:
+                (context, node) => NodeWidget(
+                  key: ValueKey('${node.identifier}_test'),
+                  node: node,
+                ),
+          ),
+        ),
+      );
       final root1Dx = tester.getTopLeft(root1Finder).dx;
       final child1Dx = tester.getTopLeft(child1Finder).dx;
 
       expect(child1Dx, equals(root1Dx + 16));
+    });
+
+    testWidgets('Dragging a node moves it', (tester) async {
+      await tester.pumpWidget(
+        TestSetupWidget(
+          child: TreeView(
+            controller: controller,
+            childExtent: 16,
+            nodeBuilder:
+                (context, node) => NodeWidget(
+                  key: ValueKey('${node.identifier}_test'),
+                  node: node,
+                ),
+          ),
+        ),
+      );
+      final movement =
+          Offset(700, tester.getCenter(root2Finder).dy) -
+          tester.getCenter(child1Finder);
+
+      await tester.dragFrom(tester.getTopLeft(child1Finder), movement);
+
+      await tester.pumpAndSettle();
+
+      expect(root2.children.first, child1);
     });
   });
 }
@@ -307,6 +352,6 @@ class TestSetupWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: child);
+    return MaterialApp(home: SizedBox(width: 1000, child: child));
   }
 }
