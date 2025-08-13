@@ -96,7 +96,7 @@ class TreeController extends ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  ///Mode a node to a new position in the tree, takes the following arguments:
+  ///Move a node to a new position in the tree, takes the following arguments:
   /// - node: the node to be moved
   /// - index: the position the new node should be inserted at among its new siblings
   /// - (optional) newParent: the new parent for this node, if null the node will be inserted in the root of the tree
