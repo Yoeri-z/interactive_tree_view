@@ -3,7 +3,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
 class TreeController extends ChangeNotifier {
+  ///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
   TreeController({
     required List<TreeNode> initialNodes,
 
@@ -250,7 +252,9 @@ class TreeController extends ChangeNotifier {
   }
 }
 
+///The representation of a single node in the tree
 class TreeNode<T extends Object?> {
+  ///The representation of a single node in the tree
   TreeNode(
     this.identifier,
     this.data, {
