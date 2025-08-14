@@ -348,10 +348,11 @@ class TreeNode<T extends Object?> {
     children.insert(index ?? children.length, child);
     child._parent = this;
     child._controller = _controller;
+    _controller!._nodeMap[child.identifier] = child;
+
     if (_controller!._onAttached != null) {
       _controller!._onAttached!(child, this);
     }
-    _controller!._nodeMap[child.identifier] = child;
     if (notify) _controller!._notifyListeners();
   }
 
@@ -372,10 +373,11 @@ class TreeNode<T extends Object?> {
     siblings.insert(index + 1, node);
     node._parent = parent;
     node._controller = _controller;
+    _controller!._nodeMap[node.identifier] = node;
+
     if (_controller!._onAttached != null) {
       _controller!._onAttached!(node, parent);
     }
-    _controller!._nodeMap[node.identifier] = node;
 
     if (_controller!._onMoved != null && index + 2 < siblings.length) {
       for (final (i, sibling) in siblings.sublist(index + 2).indexed) {
