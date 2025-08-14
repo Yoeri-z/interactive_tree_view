@@ -52,15 +52,15 @@ class _MyHomePageState extends State<MyHomePage> {
       TreeNode(uuid.v1(), 'node 6'),
     ],
     onAttached: (node, parent) {
-      print('attached node with unique id ${node.identifier}');
+      print('attached node ${node.data}');
       //Example usage: add node to remote database.
     },
     onMoved: (node, index, oldParent, newParent) {
-      print('moved node with unique id ${node.identifier} to index $index');
+      print('moved node ${node.data} to index $index');
       //Example usage: update node position and parent parameters in remote database.
     },
     onRemoved: (node, parent) {
-      print('removed node with unique id ${node.identifier}');
+      print('removed node ${node.data}');
       //Example usage: remove node from database
     },
   );

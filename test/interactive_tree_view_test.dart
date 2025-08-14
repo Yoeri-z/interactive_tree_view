@@ -121,7 +121,7 @@ void main() {
       expect(events.contains('moved:c3 to 3'), true);
     });
 
-    test('move up inside same nested parent with many children', () {
+    test('move down inside same nested parent with many children', () {
       final child3 = TreeNode('c3', 'child3');
       final child4 = TreeNode('c4', 'child4');
 
@@ -323,7 +323,7 @@ void main() {
       );
       final movement =
           Offset(700, tester.getCenter(root2Finder).dy) -
-          tester.getCenter(child1Finder);
+          tester.getTopLeft(child1Finder);
 
       await tester.dragFrom(tester.getTopLeft(child1Finder), movement);
 

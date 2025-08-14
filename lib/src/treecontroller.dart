@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 class TreeController extends ChangeNotifier {
   ///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
   TreeController({
+    ///The initial tree this controller will manage.
     required List<TreeNode> initialNodes,
 
     ///A callback to preform sideeffects when a child is added to a node
@@ -181,6 +182,18 @@ class TreeController extends ChangeNotifier {
     }
   }
 
+  void _cascadeRemove(TreeNode node) {
+    node.siblings.remove(node);
+    final parent = node.parent;
+    node._parent = null;
+    _nodeMap.remove(node.identifier);
+    node._controller == null;
+    if (_onRemoved != null) _onRemoved(node, parent);
+    for (final child in node.children.toList()) {
+      _cascadeRemove(child);
+    }
+  }
+
   ///Remove a node from this tree
   ///
   ///Will throw if the node is not attached to the tree when the method is called
@@ -188,13 +201,15 @@ class TreeController extends ChangeNotifier {
     assert(node.isAttached, '''
       Node must be attached in order for it to be able to be removed
       ''');
+    final oldIndex = node.index;
+    final movedSiblings = node.siblings.sublist(oldIndex + 1);
+    _cascadeRemove(node);
+    if (_onMoved != null) {
+      for (final (index, sibling) in movedSiblings.indexed) {
+        _onMoved(sibling, oldIndex + index, sibling.parent, sibling.parent);
+      }
+    }
 
-    final removed = node.siblings.remove(node);
-    final parent = node.parent;
-    node._parent = null;
-    _nodeMap.remove(node.identifier);
-    node._controller == null;
-    if (_onRemoved != null && removed) _onRemoved(node, parent);
     if (notify) notifyListeners();
   }
 
