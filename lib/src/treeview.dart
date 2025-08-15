@@ -198,23 +198,32 @@ class _NodeWidgetState extends State<_NodeWidget> {
             onAcceptWithDetails: (details) {
               final placement = getIndicatorPlacement(details);
               if (placement == Placement.child) {
-                widget.props.controller.move(
-                  details.data,
-                  0,
-                  newParent: widget.node,
-                );
+                details.data.isAttached
+                    ? widget.props.controller.move(
+                      details.data,
+                      0,
+                      newParent: widget.node,
+                    )
+                    : widget.node.attachChild(details.data, index: 0);
               } else if (placement == Placement.below) {
-                widget.props.controller.move(
-                  details.data,
-                  widget.node.index + 1,
-                  newParent: widget.node.parent,
-                );
+                details.data.isAttached
+                    ? widget.props.controller.move(
+                      details.data,
+                      widget.node.index + 1,
+                      newParent: widget.node.parent,
+                    )
+                    : widget.node.attachSibling(details.data);
               } else {
-                widget.props.controller.move(
-                  details.data,
-                  widget.node.index,
-                  newParent: widget.node.parent,
-                );
+                details.data.isAttached
+                    ? widget.props.controller.move(
+                      details.data,
+                      widget.node.index,
+                      newParent: widget.node.parent,
+                    )
+                    : widget.node.attachSibling(
+                      details.data,
+                      index: widget.node.index,
+                    );
               }
             },
             onMove: (details) {

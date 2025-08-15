@@ -356,11 +356,11 @@ class TreeNode<T extends Object?> {
     if (notify) _controller!._notifyListeners();
   }
 
-  ///Adds a sibling next to [this] node.
+  ///Adds a sibling next to [this] node or at [index] if it is specified.
   ///Use this to attach new nodes to the tree.
   ///
   ///This method will throw if the node is already in the tree or if the node this method is called on is not in the tree controller.
-  void attachSibling<U>(TreeNode<U> node, {bool notify = true}) {
+  void attachSibling<U>(TreeNode<U> node, {int? index, bool notify = true}) {
     assert(
       _controller != null,
       'Cannot attach nodes to eachother if they are not in a tree controller',
@@ -370,7 +370,8 @@ class TreeNode<T extends Object?> {
       If you want to move a node use [moveTo] instead. 
       You can get the node with this identifier by calling [getByIdentifier(identifier)] on the [TreeController]
       ''');
-    siblings.insert(index + 1, node);
+    final insertIndex = index ?? this.index + 1;
+    siblings.insert(insertIndex, node);
     node._parent = parent;
     node._controller = _controller;
     _controller!._nodeMap[node.identifier] = node;
@@ -379,9 +380,9 @@ class TreeNode<T extends Object?> {
       _controller!._onAttached!(node, parent);
     }
 
-    if (_controller!._onMoved != null && index + 2 < siblings.length) {
-      for (final (i, sibling) in siblings.sublist(index + 2).indexed) {
-        _controller!._onMoved!(sibling, index + 2 + i, parent, parent);
+    if (_controller!._onMoved != null && insertIndex + 1 < siblings.length) {
+      for (final (i, sibling) in siblings.sublist(insertIndex + 1).indexed) {
+        _controller!._onMoved!(sibling, insertIndex + 1 + i, parent, parent);
       }
     }
     if (notify) _controller!._notifyListeners();
