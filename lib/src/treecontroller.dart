@@ -5,38 +5,11 @@ import 'package:flutter/material.dart';
 
 ///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
 class TreeController extends ChangeNotifier {
-  ///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
-  TreeController({
-    ///The initial tree this controller will manage.
-    required List<TreeNode> initialNodes,
-
-    ///A callback to preform sideeffects when a child is added to a node
-    void Function(TreeNode node, TreeNode? parent)? onAttached,
-
-    ///A callback to preform sideeffects when a child is removed from a node
-    void Function(TreeNode node, TreeNode? parent)? onRemoved,
-
-    ///A callback to preform sideeffection when a node is moved to another location in the tree
-    ///the position parameter is the position the node has in the array of siblings.
-    ///
-    ///equal to node.index
-    void Function(
-      TreeNode node,
-      int position,
-      TreeNode? oldParent,
-      TreeNode? newParent,
-    )?
-    onMoved,
-  }) : _onAttached = onAttached,
-       _onRemoved = onRemoved,
-       _onMoved = onMoved,
-       rootNodes = initialNodes {
-    _initToDict(null, rootNodes, 0);
-  }
-
   final void Function(TreeNode node, TreeNode? parent)? _onAttached;
 
   final void Function(TreeNode node, TreeNode? parent)? _onRemoved;
+
+  final void Function()? _onChanged;
 
   final void Function(
     TreeNode node,
@@ -52,6 +25,40 @@ class TreeController extends ChangeNotifier {
   ///The rootnodes of this tree.
   final List<TreeNode> rootNodes;
   final _nodeMap = HashMap<Object, TreeNode>();
+
+  ///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
+  TreeController({
+    ///The initial tree this controller will manage.
+    required List<TreeNode> initialNodes,
+
+    ///A callback to preform sideeffects when a child is added to a node
+    void Function(TreeNode node, TreeNode? parent)? onAttached,
+
+    ///A callback to preform sideeffects when a child is removed from a node
+    void Function(TreeNode node, TreeNode? parent)? onRemoved,
+
+    ///A callback to perform sideeffect when tree configuration changes.
+    ///This will be called only once if the tree changes, instead of being called for every node that changes.
+    void Function()? onChanged,
+
+    ///A callback to preform sideeffection when a node is moved to another location in the tree
+    ///the position parameter is the position the node has in the array of siblings.
+    ///
+    ///equal to node.index
+    void Function(
+      TreeNode node,
+      int position,
+      TreeNode? oldParent,
+      TreeNode? newParent,
+    )?
+    onMoved,
+  }) : _onAttached = onAttached,
+       _onRemoved = onRemoved,
+       _onMoved = onMoved,
+       _onChanged = onChanged,
+       rootNodes = initialNodes {
+    _initToDict(null, rootNodes, 0);
+  }
 
   ///Flatly maps the [rootNodes] to the [_nodeMap]
   void _initToDict(TreeNode? parent, List<TreeNode> nodes, int depth) {
@@ -94,6 +101,10 @@ class TreeController extends ChangeNotifier {
     if (_onMoved != null) {
       _onMoved(node1, node2Index, node1Parent, node2Parent);
       _onMoved(node2, node1Index, node2Parent, node1Parent);
+    }
+
+    if (_onChanged != null) {
+      _onChanged();
     }
 
     if (notify) notifyListeners();
@@ -178,6 +189,9 @@ class TreeController extends ChangeNotifier {
           );
         }
       }
+      if (_onChanged != null) {
+        _onChanged();
+      }
       if (notify) notifyListeners();
     }
   }
@@ -210,6 +224,9 @@ class TreeController extends ChangeNotifier {
       }
     }
 
+    if (_onChanged != null) {
+      _onChanged();
+    }
     if (notify) notifyListeners();
   }
 
@@ -227,6 +244,9 @@ class TreeController extends ChangeNotifier {
     node._controller = this;
     _nodeMap[node.identifier] = node;
     if (_onAttached != null) _onAttached(node, null);
+    if (_onChanged != null) {
+      _onChanged();
+    }
     if (notify) notifyListeners();
   }
 
@@ -353,6 +373,11 @@ class TreeNode<T extends Object?> {
     if (_controller!._onAttached != null) {
       _controller!._onAttached!(child, this);
     }
+
+    if (_controller!._onChanged != null) {
+      _controller!._onChanged!();
+    }
+
     if (notify) _controller!._notifyListeners();
   }
 
@@ -385,6 +410,11 @@ class TreeNode<T extends Object?> {
         _controller!._onMoved!(sibling, insertIndex + 1 + i, parent, parent);
       }
     }
+
+    if (_controller!._onChanged != null) {
+      _controller!._onChanged!();
+    }
+
     if (notify) _controller!._notifyListeners();
   }
 
@@ -420,6 +450,10 @@ class TreeNode<T extends Object?> {
       _controller!._onMoved!(siblings[index], index, parent, parent);
     }
 
+    if (_controller!._onChanged != null) {
+      _controller!._onChanged!();
+    }
+
     if (notify) _controller!._notifyListeners();
   }
 
@@ -446,6 +480,10 @@ class TreeNode<T extends Object?> {
     if (_controller!._onMoved != null) {
       _controller!._onMoved!(this, index + 1, parent, parent);
       _controller!._onMoved!(siblings[index], index, parent, parent);
+    }
+
+    if (_controller!._onChanged != null) {
+      _controller!._onChanged!();
     }
 
     if (notify) _controller!._notifyListeners();
