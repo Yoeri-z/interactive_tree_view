@@ -433,6 +433,27 @@ class TreeNode<T extends Object?> {
     if (notify) _controller!._notifyListeners();
   }
 
+  ///Replace this node by another node
+  void replace(TreeNode other, {bool notify = true}) {
+    assert(isAttached, 'Can not replace a node that is not attached');
+    final controller = _controller!;
+    other._parent = parent;
+
+    controller.remove(this);
+    other._attach(_controller!);
+
+    _parent = null;
+
+    if (_controller!._onAttached != null) {
+      _controller!._onAttached!(other, other.parent);
+    }
+    if (_controller?._onChanged != null) {
+      _controller!._onChanged!();
+    }
+
+    if (notify) _controller!._notifyListeners();
+  }
+
   ///Move this node to the [newParent] or the root of the tree if no [newParent] is supplied
   ///
   ///This method will throw if the node is not attached to a tree controller
