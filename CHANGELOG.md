@@ -6,6 +6,7 @@
  - Made the remove method also call the moved callback for potentially displaced siblings
  - Made it so nodes can be dragged in from outside the tree as long as they are TreeNodes, this will call the onAttached callback
  - Added new onChanged callback to controller.
+ - Added replaceWith method to `TreeNode`
 ## 0.9.2
  - Added the option to drag nodes as a child of an empty node, by hovering over the far right of it.
  - Added child option to placement enum

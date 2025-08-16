@@ -434,10 +434,11 @@ class TreeNode<T extends Object?> {
   }
 
   ///Replace this node by another node
-  void replace(TreeNode other, {bool notify = true}) {
+  void replaceWith(TreeNode other, {bool notify = true}) {
     assert(isAttached, 'Can not replace a node that is not attached');
     final controller = _controller!;
     other._parent = parent;
+    siblings[index] = other;
 
     controller.remove(this);
     other._attach(_controller!);
