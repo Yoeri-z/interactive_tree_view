@@ -363,7 +363,7 @@ class TreeNode<T extends Object?> {
   void _attach(TreeController controller) {
     traverse((node) {
       node._controller = controller;
-      node._controller!._nodeMap[identifier] = this;
+      node._controller!._nodeMap[node.identifier] = this;
     });
   }
 
