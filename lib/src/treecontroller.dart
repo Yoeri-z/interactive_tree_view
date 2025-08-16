@@ -438,9 +438,10 @@ class TreeNode<T extends Object?> {
     assert(isAttached, 'Can not replace a node that is not attached');
     final controller = _controller!;
     other._parent = parent;
-    siblings[index] = other;
-
+    final insertIndex = index;
+    final insertSiblings = siblings;
     controller.remove(this);
+    insertSiblings.insert(insertIndex, other);
     other._attach(_controller!);
 
     _parent = null;
