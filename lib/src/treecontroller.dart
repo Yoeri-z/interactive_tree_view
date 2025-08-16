@@ -169,6 +169,10 @@ class TreeController extends ChangeNotifier {
         }
       }
 
+      if (_onChanged != null) {
+        _onChanged();
+      }
+
       if (notify) notifyListeners();
     } else {
       final oldParent = node.parent;
@@ -189,9 +193,11 @@ class TreeController extends ChangeNotifier {
           );
         }
       }
+
       if (_onChanged != null) {
         _onChanged();
       }
+
       if (notify) notifyListeners();
     }
   }
