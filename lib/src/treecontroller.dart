@@ -239,7 +239,7 @@ class TreeController extends ChangeNotifier {
   ///Add a node to the root of this tree
   ///
   ///If the node is already attached to the tree controller this method will throw.
-  void addRoot(TreeNode node, {bool notify = true}) {
+  void attachRoot(TreeNode node, {bool notify = true}) {
     assert(!node.isAttached, '''
       A node with this identifier is already attached to the tree.
       If you want to move a node use [move] instead. 
@@ -247,8 +247,8 @@ class TreeController extends ChangeNotifier {
       ''');
 
     rootNodes.add(node);
-    node._controller = this;
-    _nodeMap[node.identifier] = node;
+    node._attach(this);
+
     if (_onAttached != null) _onAttached(node, null);
     if (_onChanged != null) {
       _onChanged();
@@ -356,6 +356,13 @@ class TreeNode<T extends Object?> {
   ///A flag indicating if this node is a parent node (so a node with children)
   bool get isParent => children.isNotEmpty;
 
+  void _attach(TreeController controller) {
+    traverse((node) {
+      node._controller = controller;
+      node._controller!._nodeMap[identifier] = this;
+    });
+  }
+
   ///A method to attach a child to this node. Use this to attach new nodes to the tree.
   ///
   ///This method will throw if the childnode is already in the tree or if the node this method is called on is not in the tree controller.
@@ -373,8 +380,7 @@ class TreeNode<T extends Object?> {
 
     children.insert(index ?? children.length, child);
     child._parent = this;
-    child._controller = _controller;
-    _controller!._nodeMap[child.identifier] = child;
+    child._attach(_controller!);
 
     if (_controller!._onAttached != null) {
       _controller!._onAttached!(child, this);
@@ -404,8 +410,7 @@ class TreeNode<T extends Object?> {
     final insertIndex = index ?? this.index + 1;
     siblings.insert(insertIndex, node);
     node._parent = parent;
-    node._controller = _controller;
-    _controller!._nodeMap[node.identifier] = node;
+    node._attach(_controller!);
 
     if (_controller!._onAttached != null) {
       _controller!._onAttached!(node, parent);
