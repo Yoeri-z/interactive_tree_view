@@ -304,6 +304,10 @@ class TreeNode<T extends Object?> {
     this.expanded = true,
   }) {
     this.children = children ?? List.empty(growable: true);
+
+    for (final child in this.children) {
+      child._parent = this;
+    }
   }
 
   ///The identifier of this node.
