@@ -237,15 +237,7 @@ class TreeController extends ChangeNotifier {
   }
 
   ///Add a node to the root of this tree
-  ///
-  ///If the node is already attached to the tree controller this method will throw.
   void attachRoot(TreeNode node, {bool notify = true}) {
-    assert(!node.isAttached, '''
-      A node with this identifier is already attached to the tree.
-      If you want to move a node use [move] instead. 
-      You can get the node with this identifier by calling [getByIdentifier(identifier)]
-      ''');
-
     rootNodes.add(node);
     node._attach(this);
 
@@ -372,7 +364,7 @@ class TreeNode<T extends Object?> {
 
   ///A method to attach a child to this node. Use this to attach new nodes to the tree.
   ///
-  ///This method will throw if the childnode is already in the tree or if the node this method is called on is not in the tree controller.
+  ///This method will throw if the node this method is called on is not in the tree controller.
   void attachChild<U>(TreeNode<U> child, {int? index, bool notify = true}) {
     assert(
       isAttached,
@@ -397,7 +389,7 @@ class TreeNode<T extends Object?> {
   ///Adds a sibling next to [this] node or at [index] if it is specified.
   ///Use this to attach new nodes to the tree.
   ///
-  ///This method will throw if the node is already in the tree or if the node this method is called on is not in the tree controller.
+  ///This method will throw if the node this method is called on is not in the tree controller.
   void attachSibling<U>(TreeNode<U> node, {int? index, bool notify = true}) {
     assert(isAttached, '''
       Cannot attach a node to a node that is not attached
