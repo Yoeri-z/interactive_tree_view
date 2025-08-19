@@ -362,6 +362,9 @@ class TreeNode<T extends Object?> {
 
   void _attach(TreeController controller) {
     traverse((node) {
+      if (node._controller != null && node._controller != controller) {
+        node._controller!.remove(node);
+      }
       node._controller = controller;
       node._controller!._nodeMap[node.identifier] = this;
     });
@@ -375,12 +378,6 @@ class TreeNode<T extends Object?> {
       isAttached,
       'Cannot attach nodes to eachother if they are not in a tree controller',
     );
-
-    assert(!child.isAttached, '''
-      A node with this identifier is already attached to the tree.
-      If you want to move a node use [moveTo] instead. 
-      You can get the node with this identifier by calling [getByIdentifier(identifier)] on the [TreeController]
-      ''');
 
     children.insert(index ?? children.length, child);
     child._parent = this;
@@ -402,15 +399,10 @@ class TreeNode<T extends Object?> {
   ///
   ///This method will throw if the node is already in the tree or if the node this method is called on is not in the tree controller.
   void attachSibling<U>(TreeNode<U> node, {int? index, bool notify = true}) {
-    assert(
-      _controller != null,
-      'Cannot attach nodes to eachother if they are not in a tree controller',
-    );
-    assert(!node.isAttached, '''
-      A node with this identifier is already attached to the tree.
-      If you want to move a node use [moveTo] instead. 
-      You can get the node with this identifier by calling [getByIdentifier(identifier)] on the [TreeController]
+    assert(isAttached, '''
+      Cannot attach a node to a node that is not attached
       ''');
+
     final insertIndex = index ?? this.index + 1;
     siblings.insert(insertIndex, node);
     node._parent = parent;
