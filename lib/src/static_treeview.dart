@@ -3,26 +3,14 @@ import 'package:interactive_tree_view/interactive_tree_view.dart';
 import 'package:interactive_tree_view/src/internal/node_widget.dart';
 import 'package:interactive_tree_view/src/internal/tree_props.dart';
 
-///Indicates the placement of a node with respect to another node.
-///
-///Used in the [TreeView.indicatorBuilder] to indicate the placement of the indicator with respect to the given node.
-enum Placement {
-  ///Placed above.
-  above,
-
-  ///Placed below.
-  below,
-
-  ///Placed as child.
-  child,
-}
-
-///A widget used to render a treeview in the ui, based on the state of this tree inside the controller.
-class TreeView extends StatefulWidget {
-  ///A widget used to render a treeview in the ui, based on the state of this tree inside the controller.
-  const TreeView({
+///A widget used to render a treeview in the ui, this tree does not take a controller but root nodes instead.
+///Use this widget if you want to display a treeview that the user can not modify.
+class StaticTreeview extends StatefulWidget {
+  ///A widget used to render a treeview in the ui, this tree does not take a controller but root nodes instead.
+  ///Use this widget if you want to display a treeview that the user can not modify.
+  const StaticTreeview({
     super.key,
-    required this.controller,
+    required this.nodes,
     required this.nodeBuilder,
     this.indicator = const DefaultIndicator(height: 15),
     this.indicatorBuilder,
@@ -31,8 +19,8 @@ class TreeView extends StatefulWidget {
     this.animationDuration,
   });
 
-  ///The controller this widget should use to build its contents.
-  final TreeController controller;
+  ///The tree the widget will use to build its contents.
+  final List<TreeNode> nodes;
 
   ///The builder used to build each node.
   ///Provides the context and the node being built, use the methods available on node to interact with it.
@@ -68,53 +56,66 @@ class TreeView extends StatefulWidget {
   ///The duration of the collapse and expand animations.
   final Duration? animationDuration;
 
-  TreeViewProps get _props => TreeViewProps(
-    controller: controller,
-    itemBuilder: nodeBuilder,
-    indicator: indicator,
-    indicatorBuilder: indicatorBuilder,
-    childExtent: childExtent,
-    spacing: spacing,
-    animationDuration: animationDuration ?? const Duration(milliseconds: 150),
-  );
+  // TreeViewProps get _props => TreeViewProps(
+  //   controller: controller,
+  //   itemBuilder: nodeBuilder,
+  //   indicator: indicator,
+  //   indicatorBuilder: indicatorBuilder,
+  //   childExtent: childExtent,
+  //   spacing: spacing,
+  //   animationDuration: animationDuration ?? const Duration(milliseconds: 150),
+  // );
 
   @override
-  State<TreeView> createState() => _TreeViewState();
+  State<StaticTreeview> createState() => _TreeViewState();
 }
 
-class _TreeViewState extends State<TreeView> {
+class _TreeViewState extends State<StaticTreeview> {
   void listener() => setState(() {});
+
+  late var controller = TreeController(initialNodes: widget.nodes);
 
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(listener);
+    controller.traverse((node) => node.draggable = false);
+    controller.addListener(listener);
   }
 
   @override
-  void didUpdateWidget(covariant TreeView oldWidget) {
+  void didUpdateWidget(covariant StaticTreeview oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller == widget.controller) return;
+    if (oldWidget.nodes == widget.nodes) return;
 
-    oldWidget.controller.removeListener(listener);
-    widget.controller.addListener(listener);
+    controller.dispose();
+    controller = TreeController(initialNodes: widget.nodes);
+    controller.addListener(listener);
   }
 
   @override
   void dispose() {
-    widget.controller.removeListener(listener);
+    controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: widget.controller.rootCount,
+      itemCount: controller.rootCount,
       itemBuilder:
           (context, index) => NodeWidget(
-            key: ValueKey(widget.controller.rootNodes[index].identifier),
-            node: widget.controller.rootNodes[index],
-            props: widget._props,
+            key: ValueKey(controller.rootNodes[index].identifier),
+            node: controller.rootNodes[index],
+            props: TreeViewProps(
+              controller: controller,
+              itemBuilder: widget.nodeBuilder,
+              indicator: widget.indicator,
+              indicatorBuilder: widget.indicatorBuilder,
+              childExtent: widget.childExtent,
+              spacing: widget.spacing,
+              animationDuration:
+                  widget.animationDuration ?? const Duration(milliseconds: 150),
+            ),
           ),
     );
   }

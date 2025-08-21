@@ -197,8 +197,7 @@ For more details, see: [TreeNode api reference](https://pub.dev/documentation/in
 
 ## `TreeView` widget
 
-Displays a tree from a `TreeController`. Highly customizable — you can also build a custom UI by listening to the controller.
-
+Displays a tree from a `TreeController`.
 ### Constructor
 ```dart
 TreeView(
@@ -216,6 +215,11 @@ TreeView(
   animationDuration: const Duration(milliseconds: 100),
 );
 ```
+
+## `StaticTreeView` widget
+Displays a tree from a list of `TreeNodes`. 
+Very similar to `TreeView`, but does not allow the user to modify the tree through the ui.
+
 See [API reference]() for more details
 
 ---
