@@ -1,4 +1,5 @@
 # Interactive Treeview
+# Interactive tree view
 
 A flutter library that aims to make it easier to deal with tree structures in both logic and UI.
 
@@ -144,7 +145,7 @@ controller.traverse(action);
 controller.collapseAll();
 controller.expandAll();
 ```
-See [API reference]() for more details
+For more details, see: [TreeController api reference](https://pub.dev/documentation/interactive_tree_view/latest/interactive_tree_view/TreeController-class.html)
 
 ---
 
@@ -190,7 +191,7 @@ node.collapse();
 node.toggle();
 node.traverse(action)
 ```
-See [API reference]() for more details
+For more details, see: [TreeNode api reference](https://pub.dev/documentation/interactive_tree_view/latest/interactive_tree_view/TreeController-class.html)
 
 ---
 

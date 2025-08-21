@@ -6,14 +6,28 @@ import 'package:flutter/material.dart';
 ///A controller that manages a tree consisting of many treenodes.
 ///Exposes methods to: get, attach, move, delete or modify nodes.
 class TreeController extends ChangeNotifier {
-  ///A controller that manages a tree consisting of many treenodes.
-  ///Exposes methods to: get, attach, move, delete or modify nodes.
-  ///
-  ///The constructor consists of the following fields:
-  /// - initialNodes: The nodes forming the tree this controller will contain at its construction
-  /// - (optional) onAttached: A callback to preform sideeffects when a child is added to a node
-  /// - (optional) onRemoved: A callback to preform sideeffects when a child is removed from a node
-  /// - (optional) onMoved: A callback to preform sideeffection when a node is moved to another location in the tree
+  final void Function(TreeNode node, TreeNode? parent)? _onAttached;
+
+  final void Function(TreeNode node, TreeNode? parent)? _onRemoved;
+
+  final void Function()? _onChanged;
+
+  final void Function(
+    TreeNode node,
+    int position,
+    TreeNode? oldParent,
+    TreeNode? newParent,
+  )?
+  _onMoved;
+
+  ///The number of rootnodes in the tree.
+  int get rootCount => rootNodes.length;
+
+  ///The rootnodes of this tree.
+  final List<TreeNode> rootNodes;
+  final _nodeMap = HashMap<Object, TreeNode>();
+
+  ///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
   TreeController({
     ///The tree this controller will contain at its construction
     required List<TreeNode> initialNodes,
@@ -23,6 +37,10 @@ class TreeController extends ChangeNotifier {
 
     ///A callback to preform sideeffects when a child is removed from a node
     void Function(TreeNode node, TreeNode? parent)? onRemoved,
+
+    ///A callback to perform sideeffect when tree configuration changes.
+    ///This will be called only once if the tree changes, instead of being called for every node that changes.
+    void Function()? onChanged,
 
     ///A callback to preform sideeffection when a node is moved to another location in the tree
     ///the position parameter is the position the node has in the array of siblings.
@@ -38,27 +56,10 @@ class TreeController extends ChangeNotifier {
   }) : _onAttached = onAttached,
        _onRemoved = onRemoved,
        _onMoved = onMoved,
+       _onChanged = onChanged,
        rootNodes = initialNodes {
     _initToDict(null, rootNodes, 0);
   }
-
-  final void Function(TreeNode node, TreeNode? parent)? _onAttached;
-
-  final void Function(TreeNode node, TreeNode? parent)? _onRemoved;
-
-  final void Function(
-    TreeNode node,
-    int position,
-    TreeNode? oldParent,
-    TreeNode? newParent,
-  )?
-  _onMoved;
-
-  ///The number of rootnodes in the tree managed by this controller.
-  int get rootCount => rootNodes.length;
-
-  final List<TreeNode> rootNodes;
-  final _nodeMap = HashMap<Object, TreeNode>();
 
   ///Flatly maps the [rootNodes] to the [_nodeMap]
   void _initToDict(TreeNode? parent, List<TreeNode> nodes, int depth) {
@@ -103,10 +104,14 @@ class TreeController extends ChangeNotifier {
       _onMoved(node2, node1Index, node2Parent, node1Parent);
     }
 
+    if (_onChanged != null) {
+      _onChanged();
+    }
+
     if (notify) notifyListeners();
   }
 
-  ///Mode a node to a new position in the tree, takes the following arguments:
+  ///Move a node to a new position in the tree, takes the following arguments:
   /// - node: the node to be moved
   /// - index: the position the new node should be inserted at among its new siblings
   /// - (optional) newParent: the new parent for this node, if null the node will be inserted in the root of the tree
@@ -165,6 +170,10 @@ class TreeController extends ChangeNotifier {
         }
       }
 
+      if (_onChanged != null) {
+        _onChanged();
+      }
+
       if (notify) notifyListeners();
     } else {
       final oldParent = node.parent;
@@ -185,7 +194,24 @@ class TreeController extends ChangeNotifier {
           );
         }
       }
+
+      if (_onChanged != null) {
+        _onChanged();
+      }
+
       if (notify) notifyListeners();
+    }
+  }
+
+  void _cascadeRemove(TreeNode node) {
+    node.siblings.remove(node);
+    final parent = node.parent;
+    node._parent = null;
+    _nodeMap.remove(node.identifier);
+    node._controller == null;
+    if (_onRemoved != null) _onRemoved(node, parent);
+    for (final child in node.children.toList()) {
+      _cascadeRemove(child);
     }
   }
 
@@ -196,30 +222,30 @@ class TreeController extends ChangeNotifier {
     assert(node.isAttached, '''
       Node must be attached in order for it to be able to be removed
       ''');
+    final oldIndex = node.index;
+    final movedSiblings = node.siblings.sublist(oldIndex + 1);
+    _cascadeRemove(node);
+    if (_onMoved != null) {
+      for (final (index, sibling) in movedSiblings.indexed) {
+        _onMoved(sibling, oldIndex + index, sibling.parent, sibling.parent);
+      }
+    }
 
-    final removed = node.siblings.remove(node);
-    final parent = node.parent;
-    node._parent = null;
-    _nodeMap.remove(node.identifier);
-    node._controller == null;
-    if (_onRemoved != null && removed) _onRemoved(node, parent);
+    if (_onChanged != null) {
+      _onChanged();
+    }
     if (notify) notifyListeners();
   }
 
   ///Add a node to the root of this tree
-  ///
-  ///If the node is already attached to the tree controller this method will throw.
-  void addRoot(TreeNode node, {bool notify = true}) {
-    assert(!node.isAttached, '''
-      A node with this identifier is already attached to the tree.
-      If you want to move a node use [move] instead. 
-      You can get the node with this identifier by calling [getByIdentifier(identifier)]
-      ''');
-
+  void attachRoot(TreeNode node, {bool notify = true}) {
     rootNodes.add(node);
-    node._controller = this;
-    _nodeMap[node.identifier] = node;
+    node._attach(this);
+
     if (_onAttached != null) _onAttached(node, null);
+    if (_onChanged != null) {
+      _onChanged();
+    }
     if (notify) notifyListeners();
   }
 
@@ -273,6 +299,10 @@ class TreeNode<T extends Object?> {
     this.expanded = true,
   }) {
     this.children = children ?? List.empty(growable: true);
+
+    for (final child in this.children) {
+      child._parent = this;
+    }
   }
 
   ///The identifier of this node.
@@ -325,58 +355,91 @@ class TreeNode<T extends Object?> {
   ///A flag indicating if this node is a parent node (so a node with children)
   bool get isParent => children.isNotEmpty;
 
+  void _attach(TreeController controller) {
+    traverse((node) {
+      if (node._controller != null && node._controller != controller) {
+        node._controller!.remove(node);
+      }
+      node._controller = controller;
+      node._controller!._nodeMap[node.identifier] = this;
+    });
+  }
+
   ///A method to attach a child to this node. Use this to attach new nodes to the tree.
   ///
-  ///This method will throw if the childnode is already in the tree or if the node this method is called on is not in the tree controller.
+  ///This method will throw if the node this method is called on is not in the tree controller.
   void attachChild<U>(TreeNode<U> child, {int? index, bool notify = true}) {
     assert(
       isAttached,
       'Cannot attach nodes to eachother if they are not in a tree controller',
     );
 
-    assert(!child.isAttached, '''
-      A node with this identifier is already attached to the tree.
-      If you want to move a node use [moveTo] instead. 
-      You can get the node with this identifier by calling [getByIdentifier(identifier)] on the [TreeController]
-      ''');
-
     children.insert(index ?? children.length, child);
     child._parent = this;
-    child._controller = _controller;
+    child._attach(_controller!);
+
     if (_controller!._onAttached != null) {
       _controller!._onAttached!(child, this);
     }
-    _controller!._nodeMap[child.identifier] = child;
+
+    if (_controller!._onChanged != null) {
+      _controller!._onChanged!();
+    }
+
     if (notify) _controller!._notifyListeners();
   }
 
-  ///Adds a sibling next to [this] node.
+  ///Adds a sibling next to [this] node or at [index] if it is specified.
   ///Use this to attach new nodes to the tree.
   ///
-  ///This method will throw if the node is already in the tree or if the node this method is called on is not in the tree controller.
-  void attachSibling<U>(TreeNode<U> node, {bool notify = true}) {
-    assert(
-      _controller != null,
-      'Cannot attach nodes to eachother if they are not in a tree controller',
-    );
-    assert(!node.isAttached, '''
-      A node with this identifier is already attached to the tree.
-      If you want to move a node use [moveTo] instead. 
-      You can get the node with this identifier by calling [getByIdentifier(identifier)] on the [TreeController]
+  ///This method will throw if the node this method is called on is not in the tree controller.
+  void attachSibling<U>(TreeNode<U> node, {int? index, bool notify = true}) {
+    assert(isAttached, '''
+      Cannot attach a node to a node that is not attached
       ''');
-    siblings.insert(index + 1, node);
+
+    final insertIndex = index ?? this.index + 1;
+    siblings.insert(insertIndex, node);
     node._parent = parent;
-    node._controller = _controller;
+    node._attach(_controller!);
+
     if (_controller!._onAttached != null) {
       _controller!._onAttached!(node, parent);
     }
-    _controller!._nodeMap[node.identifier] = node;
 
-    if (_controller!._onMoved != null && index + 2 < siblings.length) {
-      for (final (i, sibling) in siblings.sublist(index + 2).indexed) {
-        _controller!._onMoved!(sibling, index + 2 + i, parent, parent);
+    if (_controller!._onMoved != null && insertIndex + 1 < siblings.length) {
+      for (final (i, sibling) in siblings.sublist(insertIndex + 1).indexed) {
+        _controller!._onMoved!(sibling, insertIndex + 1 + i, parent, parent);
       }
     }
+
+    if (_controller!._onChanged != null) {
+      _controller!._onChanged!();
+    }
+
+    if (notify) _controller!._notifyListeners();
+  }
+
+  ///Replace this node by another node
+  void replaceWith(TreeNode other, {bool notify = true}) {
+    assert(isAttached, 'Can not replace a node that is not attached');
+    final controller = _controller!;
+    other._parent = parent;
+    final insertIndex = index;
+    final insertSiblings = siblings;
+    controller.remove(this);
+    insertSiblings.insert(insertIndex, other);
+    other._attach(_controller!);
+
+    _parent = null;
+
+    if (_controller!._onAttached != null) {
+      _controller!._onAttached!(other, other.parent);
+    }
+    if (_controller?._onChanged != null) {
+      _controller!._onChanged!();
+    }
+
     if (notify) _controller!._notifyListeners();
   }
 
@@ -412,6 +475,10 @@ class TreeNode<T extends Object?> {
       _controller!._onMoved!(siblings[index], index, parent, parent);
     }
 
+    if (_controller!._onChanged != null) {
+      _controller!._onChanged!();
+    }
+
     if (notify) _controller!._notifyListeners();
   }
 
@@ -438,6 +505,10 @@ class TreeNode<T extends Object?> {
     if (_controller!._onMoved != null) {
       _controller!._onMoved!(this, index + 1, parent, parent);
       _controller!._onMoved!(siblings[index], index, parent, parent);
+    }
+
+    if (_controller!._onChanged != null) {
+      _controller!._onChanged!();
     }
 
     if (notify) _controller!._notifyListeners();
