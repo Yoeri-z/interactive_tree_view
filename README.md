@@ -1,6 +1,6 @@
-# TreeView Draggable
+# Interactive Treeview
 
-A simple, extensible TreeView widget for Flutter with support for drag-and-drop, dynamic updates, custom node rendering, and animations.
+A flutter library that aims to make it easier to deal with tree structures in both logic and UI.
 
 ## Example
 ![Gif](https://github.com/Yoeri-z/interactive_tree_view/blob/master/assets/demo.gif)
@@ -144,6 +144,7 @@ controller.traverse(action);
 controller.collapseAll();
 controller.expandAll();
 ```
+See [API reference]() for more details
 
 ---
 
@@ -189,6 +190,8 @@ node.collapse();
 node.toggle();
 node.traverse(action)
 ```
+See [API reference]() for more details
+
 ---
 
 ## `TreeView` widget
@@ -212,6 +215,7 @@ TreeView(
   animationDuration: const Duration(milliseconds: 100),
 );
 ```
+See [API reference]() for more details
 
 ---
 

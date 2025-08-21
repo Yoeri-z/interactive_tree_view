@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:interactive_tree_view/interactive_tree_view.dart';
 
-//Use a props class so we dont have to copy all the styling fields into the constructors of each widget in the tree structure
+///A props class containing all the customizable properties of a TreeView widget.
 class _TreeViewProps {
   const _TreeViewProps({
     required this.controller,
