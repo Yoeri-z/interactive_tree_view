@@ -189,7 +189,10 @@ node.attachSibling(siblingNode);
 node.moveUp();
 node.moveDown();
 node.move(index, parent: parentNode);
+//swap swaps the location of two nodes in the tree
 node.swap(otherNode);
+//replaceWith replaces a node with a new node instance
+node.replaceWith(notAttachedNode);
 node.expand();
 node.collapse();
 node.toggle();
@@ -219,6 +222,8 @@ TreeView(
   animationDuration: const Duration(milliseconds: 100),
 );
 ```
+
+Nodes in this tree can be dragged by the user to be placed somewhere else in the tree. To make a node a child of another node, drag it to the right side of that node until the indicator becomes indented.
 
 ## `StaticTreeView` widget
 Displays a tree from a list of `TreeNodes`. 

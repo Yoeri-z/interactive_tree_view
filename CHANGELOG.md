@@ -1,4 +1,4 @@
-## 0.9.3
+## 0.10.0
  - Made attachments cascade through the children of an attached node.
  - changed `addRoot` to `attachRoot` for naming consistency
  - Fixed a bug where onAttached was called before the node was fully attached.
@@ -10,7 +10,6 @@
  - Removed the requirement for the attached node to be not attached.
  - Added `StaticTreeView` widget
  - made internal file structure change
-## 0.9.2
  - Added the option to drag nodes as a child of an empty node, by hovering over the far right of it.
  - Added child option to placement enum
 
