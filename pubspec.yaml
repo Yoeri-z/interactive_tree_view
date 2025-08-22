@@ -1,6 +1,6 @@
 name: interactive_tree_view
 description: "A flutter library for creating interactive treeviews and managing tree-like structures."
-version: 0.9.3
+version: 0.10.0
 repository: https://github.com/Yoeri-z/interactive_tree_view
 environment:
   sdk: ^3.7.2
