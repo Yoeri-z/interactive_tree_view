@@ -1,4 +1,3 @@
-# Interactive Treeview
 # Interactive tree view
 
 A flutter library that aims to make it easier to deal with tree structures in both logic and UI.
@@ -112,25 +111,30 @@ Manages nodes, their positions, and notifies listeners when changes occur.
 ### How nodes become attached
 
 - Provided via `initialNodes` in the controller constructor.
-- Added with `controller.addRoot(...)`.
-- Added with `node.addChild(...)`.
-- Added with `node.addSibling(...)`.
+- Added with `controller.attachRoot(...)`.
+- Added with `node.attachChild(...)`.
+- Added with `node.attachSibling(...)`.
 
 ### Constructor example
 ```dart
 final controller = TreeController(
   initialNodes: [...],
   onAttached: (node, index, parent) {
+    // called when a node is attached
     // node: attached node
     // index: position among siblings
     // parent: parent node or null if root
   },
   onMoved: (node, index, oldParent, newParent) {
-    // called when an attached node is moved
+    // called when an attached node is moved, directly or indirectly
   },
   onRemoved: (node, index, parent) {
     // called when a node is removed/detached
   },
+  onChanged: (){
+    // called when the tree configuration changes
+    // this calls only once per change
+  }
 );
 ```
 
@@ -219,18 +223,14 @@ TreeView(
 ## `StaticTreeView` widget
 Displays a tree from a list of `TreeNodes`. 
 Very similar to `TreeView`, but does not allow the user to modify the tree through the ui.
-
-See [API reference]() for more details
-
+Takes a list of `TreeNode` instead of a `TreeController`.
 ---
 
 ## Misc.
 
 There are no built-in selection or highlighting utilities because this is quite trivial to implement. See the [example](https://github.com/Yoeri-z/interactive_tree_view/blob/master/example/lib/main.dart) in the repository for a suggested implementation.
 
-This widget was not built or tested for performance, until now i have not encountered any performance issues using the package. Since nodes are lazily loaded (only loaded when they will be on screen) performance should be quite good in general.
-
-The package has full test coverage
+This widget was not built or tested for performance, until now i have not encountered any performance issues using the package.Performance could degrade when using very deep trees but since trees are not a very convenient way to display large datasets this is not an expected usecase.
 
 ---
 
