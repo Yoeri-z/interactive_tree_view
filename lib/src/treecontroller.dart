@@ -3,7 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
+///A controller that manages a tree consisting of many treenodes.
+///Exposes methods to: get, attach, move, delete or modify nodes.
 class TreeController extends ChangeNotifier {
   final void Function(TreeNode node, TreeNode? parent)? _onAttached;
 
@@ -28,7 +29,7 @@ class TreeController extends ChangeNotifier {
 
   ///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
   TreeController({
-    ///The initial tree this controller will manage.
+    ///The tree this controller will contain at its construction
     required List<TreeNode> initialNodes,
 
     ///A callback to preform sideeffects when a child is added to a node
@@ -285,9 +286,11 @@ class TreeController extends ChangeNotifier {
   }
 }
 
-///The representation of a single node in the tree
+///An element of a tree. A tree (managed by a controller) contains many nodes.
+///The nodes define the structure of the tree.
 class TreeNode<T extends Object?> {
-  ///The representation of a single node in the tree
+  ///An element of a tree. A tree (managed by a controller) contains many nodes.
+  ///The nodes define the structure of the tree.
   TreeNode(
     this.identifier,
     this.data, {

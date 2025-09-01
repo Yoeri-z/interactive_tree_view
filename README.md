@@ -1,6 +1,6 @@
 # Interactive tree view
 
-A simple, TreeView widget and tree like structure managing for Flutter with support for drag-and-drop, dynamic updates, custom node rendering, and animations.
+A flutter library that aims to make it easier to deal with tree structures in both logic and UI.
 
 ## Example
 ![Gif](https://github.com/Yoeri-z/interactive_tree_view/blob/master/assets/demo.gif)
@@ -111,25 +111,30 @@ Manages nodes, their positions, and notifies listeners when changes occur.
 ### How nodes become attached
 
 - Provided via `initialNodes` in the controller constructor.
-- Added with `controller.addRoot(...)`.
-- Added with `node.addChild(...)`.
-- Added with `node.addSibling(...)`.
+- Added with `controller.attachRoot(...)`.
+- Added with `node.attachChild(...)`.
+- Added with `node.attachSibling(...)`.
 
 ### Constructor example
 ```dart
 final controller = TreeController(
   initialNodes: [...],
   onAttached: (node, index, parent) {
+    // called when a node is attached
     // node: attached node
     // index: position among siblings
     // parent: parent node or null if root
   },
   onMoved: (node, index, oldParent, newParent) {
-    // called when an attached node is moved
+    // called when an attached node is moved, directly or indirectly
   },
   onRemoved: (node, index, parent) {
     // called when a node is removed/detached
   },
+  onChanged: (){
+    // called when the tree configuration changes
+    // this calls only once per change
+  }
 );
 ```
 
@@ -184,7 +189,10 @@ node.attachSibling(siblingNode);
 node.moveUp();
 node.moveDown();
 node.move(index, parent: parentNode);
+//swap swaps the location of two nodes in the tree
 node.swap(otherNode);
+//replaceWith replaces a node with a new node instance
+node.replaceWith(notAttachedNode);
 node.expand();
 node.collapse();
 node.toggle();
@@ -196,8 +204,7 @@ For more details, see: [TreeNode api reference](https://pub.dev/documentation/in
 
 ## `TreeView` widget
 
-Displays a tree from a `TreeController`. Highly customizable — you can also build a custom UI by listening to the controller.
-
+Displays a tree from a `TreeController`.
 ### Constructor
 ```dart
 TreeView(
@@ -216,15 +223,19 @@ TreeView(
 );
 ```
 
+Nodes in this tree can be dragged by the user to be placed somewhere else in the tree. To make a node a child of another node, drag it to the right side of that node until the indicator becomes indented.
+
+## `StaticTreeView` widget
+Displays a tree from a list of `TreeNodes`. 
+Very similar to `TreeView`, but does not allow the user to modify the tree through the ui.
+Takes a list of `TreeNode` instead of a `TreeController`.
 ---
 
 ## Misc.
 
 There are no built-in selection or highlighting utilities because this is quite trivial to implement. See the [example](https://github.com/Yoeri-z/interactive_tree_view/blob/master/example/lib/main.dart) in the repository for a suggested implementation.
 
-This widget was not built or tested for performance, until now i have not encountered any performance issues using the package. Since nodes are lazily loaded (only loaded when they will be on screen) performance should be quite good in general.
-
-The package has full test coverage
+This widget was not built or tested for performance, until now i have not encountered any performance issues using the package.Performance could degrade when using very deep trees but since trees are not a very convenient way to display large datasets this is not an expected usecase.
 
 ---
 
