@@ -86,13 +86,9 @@ class _NodeWidgetState extends State<NodeWidget> {
               }
             },
             onMove: (details) {
-              final placement = getIndicatorPlacement(details);
+              widget.node.expand();
 
-              if (placement == Placement.child) {
-                widget.node.expand();
-              } else {
-                widget.node.collapse();
-              }
+              final placement = getIndicatorPlacement(details);
 
               if (placement != indicatorPlacement) {
                 indicatorPlacement = placement;
