@@ -31,11 +31,23 @@ class _NodeWidgetState extends State<NodeWidget> {
     final isChild = details.offset.dx > offset.dx + size!.width / 2;
 
     if (isChild) {
-      return Placement.child;
+      if (widget.props.allowPlacement(widget.node, Placement.child)) {
+        return Placement.child;
+      } else {
+        return Placement.none;
+      }
     } else if (isAbove) {
-      return Placement.above;
+      if (widget.props.allowPlacement(widget.node, Placement.above)) {
+        return Placement.above;
+      } else {
+        return Placement.none;
+      }
     } else {
-      return Placement.below;
+      if (widget.props.allowPlacement(widget.node, Placement.below)) {
+        return Placement.below;
+      } else {
+        return Placement.none;
+      }
     }
   }
 
@@ -72,7 +84,7 @@ class _NodeWidgetState extends State<NodeWidget> {
                       newParent: widget.node.parent,
                     )
                     : widget.node.attachSibling(details.data);
-              } else {
+              } else if (placement == Placement.above) {
                 details.data.isAttached
                     ? widget.props.controller.move(
                       details.data,

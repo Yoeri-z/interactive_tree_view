@@ -3,7 +3,7 @@
 A flutter library that aims to make it easier to deal with tree structures in both logic and UI.
 
 ## Example
-![Gif](https://github.com/Yoeri-z/interactive_tree_view/blob/master/assets/demo.gif)
+![Gif (if gif does not show go to the github page)](https://github.com/Yoeri-z/interactive_tree_view/blob/master/assets/demo.gif)
 ```dart
 final uuid = Uuid();
 
@@ -229,7 +229,6 @@ Nodes in this tree can be dragged by the user to be placed somewhere else in the
 Displays a tree from a list of `TreeNodes`. 
 Very similar to `TreeView`, but does not allow the user to modify the tree through the ui.
 Takes a list of `TreeNode` instead of a `TreeController`.
----
 
 ## Misc.
 

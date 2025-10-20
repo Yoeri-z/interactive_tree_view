@@ -1,3 +1,6 @@
+## 0.10.1
+ - Added `allowPlacement` method to the `TreeView` widget
+
 ## 0.10.0
  - Made attachments cascade through the children of an attached node.
  - changed `addRoot` to `attachRoot` for naming consistency

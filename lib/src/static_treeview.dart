@@ -111,6 +111,7 @@ class _TreeViewState extends State<StaticTreeview> {
               itemBuilder: widget.nodeBuilder,
               indicator: widget.indicator,
               indicatorBuilder: widget.indicatorBuilder,
+              allowPlacement: (_, _) => true,
               childExtent: widget.childExtent,
               spacing: widget.spacing,
               animationDuration:

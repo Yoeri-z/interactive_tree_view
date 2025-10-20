@@ -8,6 +8,7 @@ class TreeViewProps {
     required this.itemBuilder,
     required this.indicator,
     this.indicatorBuilder,
+    required this.allowPlacement,
     required this.childExtent,
     required this.spacing,
     required this.animationDuration,
@@ -21,6 +22,9 @@ class TreeViewProps {
     Placement intendedPlacement,
   )?
   indicatorBuilder;
+  final bool Function(TreeNode referenceNode, Placement intendedPlacement)
+  allowPlacement;
+
   final Widget indicator;
   final double childExtent;
   final double spacing;

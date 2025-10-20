@@ -15,6 +15,9 @@ enum Placement {
 
   ///Placed as child.
   child,
+
+  ///Not placed in the tree.
+  none,
 }
 
 ///A widget used to render a treeview in the ui, based on the state of this tree inside the controller.
@@ -26,6 +29,7 @@ class TreeView extends StatefulWidget {
     required this.nodeBuilder,
     this.indicator = const DefaultIndicator(height: 15),
     this.indicatorBuilder,
+    this.allowPlacement,
     this.childExtent = 8.0,
     this.spacing = 8.0,
     this.animationDuration,
@@ -54,6 +58,10 @@ class TreeView extends StatefulWidget {
   )?
   indicatorBuilder;
 
+  ///Wether or not the user is allowed to place the node at the intended placement with reference to the passed node.
+  final bool Function(TreeNode referenceNode, Placement intendedPlacement)?
+  allowPlacement;
+
   ///The indicator that is visible when a node is being dragged
   ///and shows where the widget would be placed if it would be dropped.
   ///To make an indicator that depends on the position it is in take a look at the [indicatorBuilder] property
@@ -73,6 +81,7 @@ class TreeView extends StatefulWidget {
     itemBuilder: nodeBuilder,
     indicator: indicator,
     indicatorBuilder: indicatorBuilder,
+    allowPlacement: allowPlacement ?? (_, _) => true,
     childExtent: childExtent,
     spacing: spacing,
     animationDuration: animationDuration ?? const Duration(milliseconds: 150),
