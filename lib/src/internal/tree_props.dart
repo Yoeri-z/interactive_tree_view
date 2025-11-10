@@ -12,6 +12,7 @@ class TreeViewProps {
     required this.childExtent,
     required this.spacing,
     required this.animationDuration,
+    this.dragStartMode = DragStartMode.tap,
   });
 
   final TreeController controller;
@@ -29,4 +30,5 @@ class TreeViewProps {
   final double childExtent;
   final double spacing;
   final Duration animationDuration;
+  final DragStartMode dragStartMode;
 }

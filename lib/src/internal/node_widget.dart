@@ -112,26 +112,44 @@ class _NodeWidgetState extends State<NodeWidget> {
                 return const SizedBox();
               }
               if (candidate.isEmpty) {
-                return widget.node.draggable
-                    ? Draggable(
-                      data: widget.node,
-                      onDragStarted: () {
-                        widget.node.isBeingDragged = true;
-                        isBeingDragged = true;
-                        widget.node.collapse();
-                      },
-                      onDragEnd: (_) => resetDrag(),
-                      onDraggableCanceled: (_, __) => resetDrag(),
-                      onDragCompleted: () => resetDrag(),
-                      feedback: Material(
-                        child: SizedBox(
-                          width: getObjectSize()?.width ?? 500,
-                          child: widget.props.itemBuilder(context, widget.node),
-                        ),
-                      ),
-                      child: widget.props.itemBuilder(context, widget.node),
-                    )
-                    : widget.props.itemBuilder(context, widget.node);
+                if (!widget.node.draggable) {
+                  return widget.props.itemBuilder(context, widget.node);
+                }
+
+                final feedback = Material(
+                  child: SizedBox(
+                    width: getObjectSize()?.width ?? 500,
+                    child: widget.props.itemBuilder(context, widget.node),
+                  ),
+                );
+
+                void handleDragStart() {
+                  widget.node.isBeingDragged = true;
+                  isBeingDragged = true;
+                  widget.node.collapse();
+                }
+
+                if (widget.props.dragStartMode == DragStartMode.longPress) {
+                  return LongPressDraggable<TreeNode>(
+                    data: widget.node,
+                    onDragStarted: handleDragStart,
+                    onDragEnd: (_) => resetDrag(),
+                    onDraggableCanceled: (_, __) => resetDrag(),
+                    onDragCompleted: () => resetDrag(),
+                    feedback: feedback,
+                    child: widget.props.itemBuilder(context, widget.node),
+                  );
+                } else {
+                  return Draggable<TreeNode>(
+                    data: widget.node,
+                    onDragStarted: handleDragStart,
+                    onDragEnd: (_) => resetDrag(),
+                    onDraggableCanceled: (_, __) => resetDrag(),
+                    onDragCompleted: () => resetDrag(),
+                    feedback: feedback,
+                    child: widget.props.itemBuilder(context, widget.node),
+                  );
+                }
               }
               return Column(
                 mainAxisSize: MainAxisSize.min,
