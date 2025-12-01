@@ -3,6 +3,15 @@ import 'package:interactive_tree_view/interactive_tree_view.dart';
 import 'package:interactive_tree_view/src/internal/node_widget.dart';
 import 'package:interactive_tree_view/src/internal/tree_props.dart';
 
+///Defines how drag interactions begin inside the tree view.
+enum DragStartMode {
+  ///Start dragging as soon as a drag gesture is detected.
+  tap,
+
+  ///Require a long press before dragging starts.
+  longPress,
+}
+
 ///Indicates the placement of a node with respect to another node.
 ///
 ///Used in the [TreeView.indicatorBuilder] to indicate the placement of the indicator with respect to the given node.
@@ -33,6 +42,7 @@ class TreeView extends StatefulWidget {
     this.childExtent = 8.0,
     this.spacing = 8.0,
     this.animationDuration,
+    this.dragStartMode = DragStartMode.tap,
   });
 
   ///The controller this widget should use to build its contents.
@@ -76,6 +86,9 @@ class TreeView extends StatefulWidget {
   ///The duration of the collapse and expand animations.
   final Duration? animationDuration;
 
+  ///Defines how drag interactions should be initiated for nodes in this tree.
+  final DragStartMode dragStartMode;
+
   TreeViewProps get _props => TreeViewProps(
     controller: controller,
     itemBuilder: nodeBuilder,
@@ -85,6 +98,7 @@ class TreeView extends StatefulWidget {
     childExtent: childExtent,
     spacing: spacing,
     animationDuration: animationDuration ?? const Duration(milliseconds: 150),
+    dragStartMode: dragStartMode,
   );
 
   @override

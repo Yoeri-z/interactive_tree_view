@@ -1,3 +1,6 @@
+## Suggested change
+- Added configurable drag start mode via `TreeView.dragStartMode` - simple tap or long press.
+
 ## 0.10.1
  - Added `allowPlacement` method to the `TreeView` widget
 

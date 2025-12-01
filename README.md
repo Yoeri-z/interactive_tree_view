@@ -47,6 +47,7 @@ class _ExampleTreeViewState extends State<ExampleTreeView> {
   Widget build(BuildContext context) {
     return TreeView(
       controller: controller,
+      dragStartMode: DragStartMode.longPress,
       nodeBuilder: (context, node) => Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primaryContainer,
@@ -85,6 +86,7 @@ class _ExampleTreeViewState extends State<ExampleTreeView> {
 ## Features
 
 - Drag-and-drop nodes
+- Configurable drag start mode (tap or long press)
 - Expand / collapse animations
 - Controller- and node-based updates
 - Node lookup and manipulation via unique identifiers
