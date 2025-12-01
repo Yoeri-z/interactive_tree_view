@@ -3,7 +3,8 @@
 A flutter library that aims to make it easier to deal with tree structures in both logic and UI.
 
 ## Example
-![Gif (if gif does not show go to the github page)](https://github.com/Yoeri-z/interactive_tree_view/blob/master/assets/demo.gif)
+![demo](https://github.com/user-attachments/assets/9d1bd2cf-daf1-4f03-87c2-6aa4f3c61453)
+
 ```dart
 final uuid = Uuid();
 
@@ -210,6 +211,8 @@ Displays a tree from a `TreeController`.
 ### Constructor
 ```dart
 TreeView(
+  //Optionally configure the drag start mode
+  dragStartMode: DragStartMode.tap,
   //Controller to build from.
   controller: controller,
   //Builder that is used for each node.
