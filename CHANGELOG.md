@@ -1,3 +1,8 @@
+## 0.10.3
+
+- Made sure that the `depth` property is acurate for attached nodes.
+- Added `flatList()` and `traversedFlatList()` methods to the `TreeController`.
+
 ## 0.10.2
 
 - Added configurable drag start mode to the `TreeView` constructor.

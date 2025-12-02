@@ -11,12 +11,17 @@ void main() {
     late TreeController controller;
     late List<String> events;
 
+    late List<TreeNode> depthFirstList;
+
     setUp(() {
       events = [];
       child1 = TreeNode('c1', 'child1');
       child2 = TreeNode('c2', 'child2');
       root1 = TreeNode('r1', 'root1', children: [child1, child2]);
       root2 = TreeNode('r2', 'root2');
+
+      depthFirstList = [root1, child1, child2, root2];
+
       controller = TreeController(
         initialNodes: [root1, root2],
         onAttached:
@@ -40,6 +45,7 @@ void main() {
 
       expect(child.isAttached, true);
       expect(child.parent, root2);
+      expect(child.depth, 1);
       expect(root2.children.contains(child), true);
       expect(events.contains('attached:c3 to r2'), true);
       expect(controller.getByIdentifier('c3'), child);
@@ -56,6 +62,7 @@ void main() {
       expect(controller.rootNodes.contains(newSib), true);
       expect(newSib.parent, null);
       expect(newSib.index, 1);
+      expect(newSib.depth, 0);
       expect(events.contains('attached:r3 to root'), true);
       expect(events.contains('moved:r2 to 2'), true);
       expect(controller.getByIdentifier('r3'), newSib);
@@ -72,6 +79,7 @@ void main() {
       expect(child1.siblings.contains(newSib), true);
       expect(newSib.parent, child1.parent);
       expect(newSib.index, 1);
+      expect(newSib.depth, 1);
       expect(events.contains('attached:c3 to r1'), true);
       expect(events.contains('moved:c2 to 2'), true);
       expect(controller.getByIdentifier('c3'), newSib);
@@ -82,6 +90,7 @@ void main() {
 
       expect(root1.children.first, child2);
       expect(root1.children.last, child1);
+      expect(child1.depth, 1);
       expect(events.any((e) => e == 'moved:c1 to 1'), true);
       expect(events.any((e) => e == 'moved:c2 to 0'), true);
     });
@@ -92,6 +101,7 @@ void main() {
       controller.swap(child1, child3);
       expect(child3.parent, root1);
       expect(child1.parent, root2);
+      expect(child3.depth, 1);
       expect(root1.children.contains(child3), true);
       expect(root2.children.contains(child1), true);
       expect(events.any((e) => e.startsWith('moved:c1')), true);
@@ -101,6 +111,7 @@ void main() {
     test('move inside same nested parent', () {
       controller.move(child2, 0, newParent: root1);
       expect(root1.children.first, child2);
+      expect(child2.depth, 1);
       expect(events.contains('moved:c2 to 0'), true);
       expect(events.contains('moved:c1 to 1'), true);
     });
@@ -115,6 +126,7 @@ void main() {
 
       controller.move(child4, 0, newParent: root1);
       expect(root1.children.first, child4);
+      expect(child4.depth, 1);
       expect(events.contains('moved:c4 to 0'), true);
       expect(events.contains('moved:c1 to 1'), true);
       expect(events.contains('moved:c2 to 2'), true);
@@ -131,6 +143,7 @@ void main() {
 
       controller.move(child1, 4, newParent: root1);
       expect(root1.children.last, child1);
+      expect(child4.depth, 1);
       expect(events.contains('moved:c2 to 0'), true);
       expect(events.contains('moved:c3 to 1'), true);
       expect(events.contains('moved:c4 to 2'), true);
@@ -142,6 +155,7 @@ void main() {
 
       expect(controller.rootNodes.contains(root2), false);
       expect(root1.children.contains(root2), true);
+      expect(root2.depth, 1);
       expect(events.contains('moved:r2 to 0'), true);
       expect(events.contains('moved:c1 to 1'), true);
       expect(events.contains('moved:c2 to 2'), true);
@@ -164,6 +178,19 @@ void main() {
       expect(root1.children.last, child2);
       expect(events.any((e) => e == 'moved:c2 to 1'), true);
       expect(events.any((e) => e == 'moved:c1 to 0'), true);
+    });
+
+    test('Flat List contains all nodes', () {
+      final list = controller.flatList();
+
+      expect(list.every(depthFirstList.contains), isTrue);
+      expect(list.length, depthFirstList.length);
+    });
+
+    test('Traversed flat list matches depth first list', () {
+      final list = controller.traversedFlatList();
+
+      expect(list, depthFirstList);
     });
 
     test('expand/collapse/toggle on nested node', () {

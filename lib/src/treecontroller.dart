@@ -180,6 +180,10 @@ class TreeController extends ChangeNotifier {
       node.siblings.remove(node);
 
       node._parent = newParent;
+
+      //if the node is attached as root, depth will be 0
+      node.depth = (newParent?.depth ?? -1) + 1;
+
       newSiblings.insert(index, node);
 
       if (_onMoved != null) {
@@ -266,11 +270,27 @@ class TreeController extends ChangeNotifier {
     return node;
   }
 
-  ///Traverses all the nodes attached to the tree. Calling back [action] on each node hit.
+  ///Traverses all the nodes attached to the tree depth first. Calling back [action] on each node hit.
   void traverse(void Function(TreeNode) action) {
-    for (final node in _nodeMap.values) {
-      action(node);
+    for (final node in rootNodes) {
+      node.traverse(action);
     }
+  }
+
+  ///Returns all the nodes attached to this tree in a flat list. The nodes are sorted in no particular order.
+  List<TreeNode> flatList() {
+    return _nodeMap.values.toList();
+  }
+
+  ///Computes a list with all the nodes by traversing them depth first.
+  ///
+  ///This method is more expensive than [flatList] but the nodes will have a reliable order.
+  List<TreeNode> traversedFlatList() {
+    final nodes = <TreeNode>[];
+
+    traverse((node) => nodes.add(node));
+
+    return nodes;
   }
 
   ///Expands all nodes in the tree.
@@ -355,6 +375,7 @@ class TreeNode<T extends Object?> {
   ///A flag indicating if this node is a parent node (so a node with children)
   bool get isParent => children.isNotEmpty;
 
+  ///Attach this node and all its descendants to a controller.
   void _attach(TreeController controller) {
     traverse((node) {
       if (node._controller != null && node._controller != controller) {
@@ -376,6 +397,7 @@ class TreeNode<T extends Object?> {
 
     children.insert(index ?? children.length, child);
     child._parent = this;
+    child.depth = depth + 1;
     child._attach(_controller!);
 
     if (_controller!._onAttached != null) {
@@ -401,6 +423,7 @@ class TreeNode<T extends Object?> {
     final insertIndex = index ?? this.index + 1;
     siblings.insert(insertIndex, node);
     node._parent = parent;
+    node.depth = depth;
     node._attach(_controller!);
 
     if (_controller!._onAttached != null) {
@@ -425,6 +448,7 @@ class TreeNode<T extends Object?> {
     assert(isAttached, 'Can not replace a node that is not attached');
     final controller = _controller!;
     other._parent = parent;
+    other.depth = depth;
     final insertIndex = index;
     final insertSiblings = siblings;
     controller.remove(this);
