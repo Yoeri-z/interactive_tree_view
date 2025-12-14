@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:interactive_tree_view/interactive_tree_view.dart';
-import 'package:uuid/uuid.dart';
-
-final uuid = Uuid();
 
 void main() {
   runApp(const MyApp());
@@ -36,20 +33,16 @@ class _MyHomePageState extends State<MyHomePage> {
   //create a controller to manage the nodes and to give to the TreeView widget.
   final controller = TreeController(
     initialNodes: [
-      TreeNode(
-        //The identifier of this node, in practice a unique id often comes from a remote database the nodes are stored on
-        //but since this example doesnt have a database we use the `uuid` package.
-        uuid.v1(),
+      //Since our nodes dont come from a database they dont really have an id.
+      //the auto constructor automatically assigns each new node a unique identifier.
+      TreeNode.auto(
         //The payload of  this node
         'node 1',
         //the children of this node
-        children: [
-          TreeNode(uuid.v1(), 'node 3'),
-          TreeNode(uuid.v1(), 'node 4'),
-        ],
+        children: [TreeNode.auto('node 3'), TreeNode.auto('node 4')],
       ),
-      TreeNode(uuid.v1(), 'node 2', children: [TreeNode(uuid.v1(), 'node 5')]),
-      TreeNode(uuid.v1(), 'node 6'),
+      TreeNode.auto('node 2', children: [TreeNode.auto('node 5')]),
+      TreeNode.auto('node 6'),
     ],
     onAttached: (node, parent) {
       print('attached node ${node.data}');
@@ -98,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
 
-    if (result != null) parent.attachChild(TreeNode(uuid.v1(), result));
+    if (result != null) parent.attachChild(TreeNode.auto(result));
   }
 
   @override

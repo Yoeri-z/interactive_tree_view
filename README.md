@@ -3,6 +3,7 @@
 A flutter library that aims to make it easier to deal with tree structures in both logic and UI.
 
 ## Example
+
 ![demo](https://github.com/user-attachments/assets/9d1bd2cf-daf1-4f03-87c2-6aa4f3c61453)
 
 ```dart
@@ -19,15 +20,14 @@ class ExampleTreeView extends StatefulWidget {
 class _ExampleTreeViewState extends State<ExampleTreeView> {
   final controller = TreeController(
     initialNodes: [
-      TreeNode(
-        uuid.v1(),
+      TreeNode.auto(
         'node 1',
         children: [
-          TreeNode(uuid.v1(), 'node 3'),
-          TreeNode(uuid.v1(), 'node 4'),
+          TreeNode.auto('node 3'),
+          TreeNode.auto('node 4'),
         ],
       ),
-      TreeNode(uuid.v1(), 'node 2', children: [TreeNode(uuid.v1(), 'node 5')]),
+      TreeNode.auto('node 2', children: [TreeNode(uuid.v1(), 'node 5')]),
     ],
     onAttached: (node, parent) {
       print('Attached node ${node.identifier}');
@@ -119,6 +119,7 @@ Manages nodes, their positions, and notifies listeners when changes occur.
 - Added with `node.attachSibling(...)`.
 
 ### Constructor example
+
 ```dart
 final controller = TreeController(
   initialNodes: [...],
@@ -142,6 +143,7 @@ final controller = TreeController(
 ```
 
 ### methods
+
 ```dart
 controller.getByIdentifier(id);
 controller.addRoot(node);
@@ -151,7 +153,10 @@ controller.swap(node1, node2);
 controller.traverse(action);
 controller.collapseAll();
 controller.expandAll();
+controller.flatList();
+controller.traversedFlatList();
 ```
+
 For more details, see: [TreeController api reference](https://pub.dev/documentation/interactive_tree_view/latest/interactive_tree_view/TreeController-class.html)
 
 ---
@@ -161,17 +166,24 @@ For more details, see: [TreeController api reference](https://pub.dev/documentat
 A `TreeNode` is an individual item. Construction alone does **not** attach it to a controller — attach it before using movement-related APIs.
 
 ### Constructor example
+
 ```dart
-final node = TreeNode<String>(
-  uuid.v1(),                 // unique identifier
-  'Node data',               // payload
-  children: [nodeA, nodeB], // optional children
+final node = TreeNode<DataModel>(
+  data.id,                   // unique identifier
+  data,                      // payload
+  children: [nodeA, nodeB],  // optional children
   draggable: true,           // defaults to true
   expanded: true,            // defaults to true
+);
+
+//we can use the .auto constructor to automatically assign the node a unique id.
+final node2 = TreeNode<String>.auto(
+  'Data'                     //now we only have to specify a payload
 );
 ```
 
 ### Properties
+
 ```dart
 node.identifier;     // unique id
 node.data;           // payload
@@ -186,6 +198,7 @@ node.isBeingDragged; // true when the node is currently dragged
 ```
 
 ### Methods
+
 ```dart
 node.attachChild(childNode);
 node.attachSibling(siblingNode);
@@ -201,6 +214,7 @@ node.collapse();
 node.toggle();
 node.traverse(action)
 ```
+
 For more details, see: [TreeNode api reference](https://pub.dev/documentation/interactive_tree_view/latest/interactive_tree_view/TreeController-class.html)
 
 ---
@@ -208,7 +222,9 @@ For more details, see: [TreeNode api reference](https://pub.dev/documentation/in
 ## `TreeView` widget
 
 Displays a tree from a `TreeController`.
+
 ### Constructor
+
 ```dart
 TreeView(
   //Optionally configure the drag start mode
@@ -219,7 +235,7 @@ TreeView(
   nodeBuilder: (context, node) {},
   //UI element shown while dragging that indicates the drop position.
   indicator: const DefaultIndicator(height: 15),
-  //A builder to use if you want an indicator that depends on the node that is used as reference for its placement. 
+  //A builder to use if you want an indicator that depends on the node that is used as reference for its placement.
   indicatorBuilder: (context, referenceNode, placement) {},
   indent: 8.0, // horizontal indent per depth (default 8.0).
   spacing: 8.0, // vertical spacing between nodes
@@ -231,7 +247,8 @@ TreeView(
 Nodes in this tree can be dragged by the user to be placed somewhere else in the tree. To make a node a child of another node, drag it to the right side of that node until the indicator becomes indented.
 
 ## `StaticTreeView` widget
-Displays a tree from a list of `TreeNodes`. 
+
+Displays a tree from a list of `TreeNodes`.
 Very similar to `TreeView`, but does not allow the user to modify the tree through the ui.
 Takes a list of `TreeNode` instead of a `TreeController`.
 
@@ -242,4 +259,3 @@ There are no built-in selection or highlighting utilities because this is quite 
 This widget was not built or tested for performance, until now i have not encountered any performance issues using the package.Performance could degrade when using very deep trees but since trees are not a very convenient way to display large datasets this is not an expected usecase.
 
 ---
-

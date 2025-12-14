@@ -1,5 +1,10 @@
 # example
 
-An example for the interactive_tree_view package.
+To run this example enter the following in the terminal:
 
-![Gif](https://github.com/Yoeri-z/interactive_tree_view/blob/master/assets/demo.gif)
+```bash
+# create the platform dependecies
+~/.../example$ flutter create .
+# Run the app
+~/.../example$ flutter run
+```

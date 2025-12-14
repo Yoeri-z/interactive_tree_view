@@ -1,3 +1,7 @@
+## 0.10.4
+
+- Added extra `TreeNode.auto` constructor to make treenodes without specifying a specific identifier.
+
 ## 0.10.3
 
 - Made sure that the `depth` property is acurate for attached nodes.

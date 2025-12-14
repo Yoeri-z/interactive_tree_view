@@ -306,11 +306,14 @@ class TreeController extends ChangeNotifier {
   }
 }
 
-///An element of a tree. A tree (managed by a controller) contains many nodes.
-///The nodes define the structure of the tree.
+/// An element of a tree. A tree (managed by a controller) contains many nodes.
+/// The nodes define the structure of the tree.
+///
+/// [identifier] should be unique for each node and is usually related to your [data].
+/// If you have no idea what your identifier should be, you should probably use the [TreeNode.auto] constructor
+/// to automatically assign the node an identifier.
 class TreeNode<T extends Object?> {
-  ///An element of a tree. A tree (managed by a controller) contains many nodes.
-  ///The nodes define the structure of the tree.
+  /// Create a [TreeNode].
   TreeNode(
     this.identifier,
     this.data, {
@@ -324,6 +327,20 @@ class TreeNode<T extends Object?> {
       child._parent = this;
     }
   }
+
+  /// Create a [TreeNode] with an automatically assigned unique identifier.
+  TreeNode.auto(
+    T data, {
+    bool draggable = true,
+    List<TreeNode>? children,
+    bool expanded = true,
+  }) : this(
+         Object(),
+         data,
+         draggable: draggable,
+         children: children,
+         expanded: expanded,
+       );
 
   ///The identifier of this node.
   final Object identifier;
