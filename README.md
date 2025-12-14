@@ -7,8 +7,6 @@ A flutter library that aims to make it easier to deal with tree structures in bo
 ![demo](https://github.com/user-attachments/assets/9d1bd2cf-daf1-4f03-87c2-6aa4f3c61453)
 
 ```dart
-final uuid = Uuid();
-
 class ExampleTreeView extends StatefulWidget {
   const ExampleTreeView({super.key, required this.title});
   final String title;
