@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:interactive_tree_view/interactive_tree_view.dart';
-import 'package:interactive_tree_view/src/internal/node_widget.dart';
-import 'package:interactive_tree_view/src/internal/tree_props.dart';
+
+import './defaults.dart';
+import './internal/node_widget.dart';
+import './internal/tree_props.dart';
+import './treeview.dart';
+import './treecontroller.dart';
 
 ///A widget used to render a treeview in the ui, this tree does not take a controller but root nodes instead.
 ///Use this widget if you want to display a treeview that the user can not modify.

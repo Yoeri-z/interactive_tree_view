@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:interactive_tree_view/interactive_tree_view.dart';
+
+import '../treecontroller.dart';
+import '../treeview.dart';
 
 ///A props class containing all the customizable properties of a TreeView widget.
 class TreeViewProps {

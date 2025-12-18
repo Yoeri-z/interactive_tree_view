@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:interactive_tree_view/src/internal/tree_props.dart';
-import 'package:interactive_tree_view/src/treecontroller.dart';
-import 'package:interactive_tree_view/src/treeview.dart';
+
+import './tree_props.dart';
+import '../treecontroller.dart';
+import '../treeview.dart';
 
 class NodeWidget extends StatefulWidget {
   const NodeWidget({super.key, required this.node, required this.props});

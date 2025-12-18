@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:interactive_tree_view/interactive_tree_view.dart';
-import 'package:interactive_tree_view/src/internal/node_widget.dart';
-import 'package:interactive_tree_view/src/internal/tree_props.dart';
+
+import './defaults.dart';
+import './internal/node_widget.dart';
+import './internal/tree_props.dart';
+import './treecontroller.dart';
 
 ///Defines how drag interactions begin inside the tree view.
 enum DragStartMode {
