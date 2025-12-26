@@ -177,7 +177,9 @@ class TreeController extends ChangeNotifier {
       if (notify) notifyListeners();
     } else {
       final oldParent = node.parent;
-      node.siblings.remove(node);
+      final oldSiblings = node.siblings;
+      final oldIndex = node.index;
+      oldSiblings.remove(node);
 
       node._parent = newParent;
 
@@ -187,12 +189,26 @@ class TreeController extends ChangeNotifier {
       newSiblings.insert(index, node);
 
       if (_onMoved != null) {
+        // moved node
         _onMoved(node, index, oldParent, newParent);
+
+        // siblings that shifted in the new parent
         for (final (subIndex, sibling)
             in newSiblings.sublist(index + 1).indexed) {
           _onMoved(
             sibling,
             subIndex + index + 1,
+            sibling.parent,
+            sibling.parent,
+          );
+        }
+
+        // siblings that shifted in the old parent
+        for (final (subIndex, sibling)
+            in oldSiblings.sublist(oldIndex).indexed) {
+          _onMoved(
+            sibling,
+            subIndex + oldIndex,
             sibling.parent,
             sibling.parent,
           );
