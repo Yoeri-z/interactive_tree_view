@@ -197,16 +197,18 @@ class _NodeWidgetState extends State<NodeWidget> {
                 widget.node.expanded && !isBeingDragged
                     ? Padding(
                       padding: EdgeInsets.only(left: widget.props.childExtent),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (final child in widget.node.children)
-                            NodeWidget(
-                              key: ValueKey(child.identifier),
-                              node: child,
-                              props: widget.props,
-                            ),
-                        ],
+                      child: RepaintBoundary(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final child in widget.node.children)
+                              NodeWidget(
+                                key: ValueKey(child.identifier),
+                                node: child,
+                                props: widget.props,
+                              ),
+                          ],
+                        ),
                       ),
                     )
                     : const SizedBox(),
