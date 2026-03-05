@@ -1,6 +1,7 @@
 ## 0.10.4
 
 - Added extra `TreeNode.auto` constructor to make treenodes without specifying a specific identifier.
+- Added `RepaintBoundary` to localize expand animations, this should increase performance
 
 ## 0.10.3
 
