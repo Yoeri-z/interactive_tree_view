@@ -38,7 +38,10 @@ migrate_working_dir/
 /linux/
 /ios/
 /android/
+/test/
+
 pubspec.lock
+.metadata
 
 # Symbolication related
 app.*.symbols
