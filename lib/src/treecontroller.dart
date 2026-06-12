@@ -580,6 +580,7 @@ class TreeNode<T extends Object?> {
     if (expanded) return;
 
     expanded = true;
+    if (parent != null && !parent!.expanded) parent!.expand(notify: false);
     if (notify) _controller!._notifyListeners();
   }
 

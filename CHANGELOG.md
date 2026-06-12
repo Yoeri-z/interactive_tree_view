@@ -1,3 +1,6 @@
+## 0.11.0
+- Expanding a nested collapsed node now automatically expands parents.
+
 ## 0.10.4
 
 - Added extra `TreeNode.auto` constructor to make treenodes without specifying a specific identifier.
