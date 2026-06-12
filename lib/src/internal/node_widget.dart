@@ -60,6 +60,38 @@ class _NodeWidgetState extends State<NodeWidget> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.node.data == 'Target') print('Activating target');
+
+    widget.node.activeWidget = widget;
+    widget.node.activeContext = context;
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    if (widget.node.data == 'Target') print('Activating target');
+
+    widget.node.activeWidget = widget;
+    widget.node.activeContext = context;
+  }
+
+  @override
+  void deactivate() {
+    widget.node.activeWidget = null;
+    widget.node.activeContext = null;
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    widget.node.activeWidget = null;
+    widget.node.activeContext = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: widget.props.spacing / 2),

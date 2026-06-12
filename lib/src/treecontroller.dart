@@ -1,32 +1,12 @@
 import 'dart:collection';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 ///A controller that manages a tree consisting of many treenodes.
 ///Exposes methods to: get, attach, move, delete or modify nodes.
 class TreeController extends ChangeNotifier {
-  final void Function(TreeNode node, TreeNode? parent)? _onAttached;
-
-  final void Function(TreeNode node, TreeNode? parent)? _onRemoved;
-
-  final void Function()? _onChanged;
-
-  final void Function(
-    TreeNode node,
-    int position,
-    TreeNode? oldParent,
-    TreeNode? newParent,
-  )?
-  _onMoved;
-
-  ///The number of rootnodes in the tree.
-  int get rootCount => rootNodes.length;
-
-  ///The rootnodes of this tree.
-  final List<TreeNode> rootNodes;
-  final _nodeMap = HashMap<Object, TreeNode>();
-
   ///Wraps a Tree and exposes methods to control or read certain aspects of this tree.
   TreeController({
     ///The tree this controller will contain at its construction
@@ -59,6 +39,98 @@ class TreeController extends ChangeNotifier {
        _onChanged = onChanged,
        rootNodes = initialNodes {
     _initToDict(null, rootNodes, 0);
+  }
+
+  final void Function(TreeNode node, TreeNode? parent)? _onAttached;
+
+  final void Function(TreeNode node, TreeNode? parent)? _onRemoved;
+
+  final void Function()? _onChanged;
+
+  final void Function(
+    TreeNode node,
+    int position,
+    TreeNode? oldParent,
+    TreeNode? newParent,
+  )?
+  _onMoved;
+
+  ///The number of rootnodes in the tree.
+  int get rootCount => rootNodes.length;
+
+  ///The rootnodes of this tree.
+  final List<TreeNode> rootNodes;
+  final _nodeMap = HashMap<Object, TreeNode>();
+
+  @internal
+  TreeNode? targetNode;
+
+  @internal
+  final ScrollController scrollController = ScrollController();
+
+  /// Smoothly scrolls to the given [node].
+  ///
+  /// [maxDuration] controls the total time allowed if it had to scroll from top
+  /// to the absolute bottom of the tree. The actual duration will be proportionally
+  /// shorter depending on how close the node is.
+  ///
+  /// [curve] defines the motion curve of the search sweep. [Curves.linear] is
+  /// recommended to maintain a steady tracking speed.
+  void scrollTo(
+    TreeNode node, {
+    Duration maxDuration = const Duration(milliseconds: 500),
+    Curve curve = Curves.linear,
+  }) async {
+    node.expand();
+
+    await Future.microtask(() {});
+
+    if (node._controller != this) {
+      assert(
+        node._controller == this,
+        'Must scroll to node attached to this `TreeController`',
+      );
+      return;
+    }
+
+    if (!scrollController.hasClients) return;
+
+    targetNode = node;
+
+    if (node.activeContext != null) {
+      _snapToTarget(node.activeContext!);
+      return;
+    }
+
+    void scrollListener() {
+      if (node.activeContext != null) {
+        print('Scrolling and found node');
+        scrollController.position.hold(() {});
+        scrollController.removeListener(scrollListener);
+
+        _snapToTarget(node.activeContext!);
+      }
+    }
+
+    scrollController.addListener(scrollListener);
+
+    scrollController
+        .animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: maxDuration,
+          curve: curve,
+        )
+        .then((_) {
+          scrollController.removeListener(scrollListener);
+        });
+  }
+
+  void _snapToTarget(BuildContext context) {
+    Scrollable.ensureVisible(
+      context,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   ///Flatly maps the [rootNodes] to the [_nodeMap]
@@ -320,6 +392,12 @@ class TreeController extends ChangeNotifier {
     traverse((node) => node.collapse(notify: false));
     if (notify) notifyListeners();
   }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
 }
 
 /// An element of a tree. A tree (managed by a controller) contains many nodes.
@@ -398,6 +476,12 @@ class TreeNode<T extends Object?> {
 
   TreeNode? _parent;
   TreeController? _controller;
+
+  @internal
+  Widget? activeWidget;
+
+  @internal
+  BuildContext? activeContext;
 
   ///The index this node has in its sibling array
   int get index => siblings.indexOf(this);

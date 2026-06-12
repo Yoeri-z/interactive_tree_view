@@ -134,6 +134,7 @@ class _TreeViewState extends State<TreeView> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      controller: widget.controller.scrollController,
       itemCount: widget.controller.rootCount,
       itemBuilder:
           (context, index) => NodeWidget(
